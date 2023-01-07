@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -12,43 +12,49 @@
 int main(){
     int sockfd;
     int len;
-    char buff[100];
     int response;
+    char buff[100];
 
     struct sockaddr_in addr;
 
-    // Open a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
-        perror("Cannot create socket!\n");
+        perror("Cannot create socket");
         exit(0);
     }
     printf("TCP client socket created :)\n");
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(SERVER_PORT);
-    // inet_aton(INADDR_ANY, &addr.sin_addr);?
     addr.sin_addr.s_addr = INADDR_ANY;
 
-    // Connecting to server
     response = connect(sockfd, (struct sockaddr*) &addr, sizeof(addr));
-
     if(response < 0){
-        perror("Connection to server failed!\n");
+        perror("Connection to server failed");
         close(sockfd);
         exit(0);
     }
-    printf("Connected Successfully!\n");
+    printf("Connected to server!\n");
 
-    // Receiving the time data as a string from the server
-    response = recv(sockfd, buff, sizeof(buff)+1, 0);
+    printf("Enter the expression: ");
+    scanf("%[^\n]s", buff);
+    printf("%s\n", buff);
+
+    response = send(sockfd, buff, strlen(buff)+1, 0);
     if(response < 0){
-        perror("Receive failed!\n");
+        perror("Cannot send the expression to server");
         close(sockfd);
         exit(0);
     }
+    printf("Expression sent!\n");
 
-    printf("Server time: %s", buff);
+    response = recv(sockfd, buff, strlen(buff)+1, 0);
+    if(response < 0){
+        perror("Cannot receive from server");
+        close(sockfd);
+        exit(0);
+    }
+    printf("Result: %s\n", buff);
 
     close(sockfd);
 }

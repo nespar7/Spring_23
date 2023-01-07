@@ -30,7 +30,7 @@ int main(){
     // opening a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
-        perror("Cannot create socket!\n");
+        perror("Cannot create socket");
         exit(0);
     }
     printf("TCP server socket created :)\n");
@@ -43,22 +43,22 @@ int main(){
     // Binding the server address to the socket
     response = bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
     if(response < 0){
-        perror("Unable to bind localhost!\n");
+        perror("Unable to bind to localhost");
         close(sockfd);
         exit(0);
     }
-    printf("Bound to port number: 20000\n");
+    printf("Bound to port number: %d\n", SERVER_PORT);
 
     // We listen to upto 5 servers at a time in the queue
     response = listen(sockfd, 5);
     if(response < 0){
-        perror("Failed to listen!\n");
+        perror("Failed to listen");
         close(sockfd);
         exit(0);
     }
     printf("Listening...\n");
 
-    // iterative server
+    // iterating
     while(1){
         clilen = sizeof(cli_addr);
 
@@ -66,8 +66,7 @@ int main(){
         newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr, &clilen);
 
         if(newsockfd < 0){
-            perror("Accept failed!\n");
-            close(sockfd);
+            perror("Accept failed");
             exit(0);
         }
 
@@ -76,18 +75,18 @@ int main(){
         t = time(NULL);
         snprintf(buff, sizeof(buff), "%s", ctime(&t));
 
+        // No receive call because the client does not send any data
+
         // Sending the server time message
         response = send(newsockfd, buff, strlen(buff)+1, 0);
 
         if(response < 0){
-            perror("Failed to send the message!\n");
-            close(sockfd);
+            perror("Failed to send the message");
             close(newsockfd);
             exit(0);
         }
 
         close(newsockfd);
-        // No receive call because the client does not send any data
     }
 
     close(sockfd);

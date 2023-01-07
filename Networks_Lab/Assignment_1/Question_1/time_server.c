@@ -1,8 +1,9 @@
-/************************************************************************************************************/ 
-/* References:                                                                                               */
-/*  https://www.ibm.com/docs/en/i/7.1?topic=designs-example-writing-iterative-server-program              */
-/*                                                                                                          */
-/************************************************************************************************************/
+/**********************************************************************************************/ 
+/* References:                                                                                */
+/*  https://www.ibm.com/docs/en/i/7.1?topic=designs-example-writing-iterative-server-program  */
+/*                                                                                            */
+/*  https://forgetcode.com/c/1476-tcp-socket-date-and-time                                    */
+/**********************************************************************************************/
 
 // include statements
 #include <stdio.h>
@@ -36,8 +37,8 @@ int main(){
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SERVER_PORT);
-    // inet_aton(INADDR_ANY, &serv_addr.sin_addr);
-    serv_addr.sin_addr.s_addr	= INADDR_ANY;
+    // inet_aton(INADDR_ANY, &serv_addr.sin_addr);?
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
 
     // Binding the server address to the socket
     response = bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));

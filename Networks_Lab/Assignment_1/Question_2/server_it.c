@@ -62,9 +62,14 @@ int main(){
             exit(0);
         }
 
-        int offset = 0;
+        int len = 0;
+        int received_size = 100;
+        char *received_string;
+
+        received_string = (char *)malloc(sizeof(char) * received_size);
+
         while(1){
-            response = recv(newsockfd, buff+offset, 100, 0);
+            response = recv(newsockfd, buff, 100, 0);
 
             if(response < 0){
                 perror("Cannot receive data");
@@ -72,24 +77,22 @@ int main(){
                 exit(0);
             }
 
-            if(buff[offset+response-1] == '\0'){
-                break;
+            while(len + response >= received_size){
+                received_size += 100;
             }
 
-            offset += response;
+            received_string = realloc(received_string, received_size);
+
+            strcat(received_string, buff);
+
+            if(buff[response-1] == '\0'){
+                break;
+            }
         }
         printf("Received expression: %s\n", buff);
         printf("Received bytes: %d\n", response);
 
         // DEAL WITH THE ARITHMETIC HERE
-        // char *result;
-        // strcpy(result, buff);
-        // printf("HELLO\n");
-        // float value = expression(&result);
-        // printf("%f\n", value);
-        // printf("HELLO\n");
-
-        // sprintf(buff, "%f", value);
 
         response = send(newsockfd, buff, strlen(buff)+1, 0);
         if(response < 0){

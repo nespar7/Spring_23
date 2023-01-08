@@ -20,7 +20,7 @@ int main(){
     // Open a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
-        perror("Cannot create socket!\n");
+        perror("Cannot create socket!");
         exit(0);
     }
     printf("TCP client socket created :)\n");
@@ -34,7 +34,7 @@ int main(){
     response = connect(sockfd, (struct sockaddr*) &addr, sizeof(addr));
 
     if(response < 0){
-        perror("Connection to server failed!\n");
+        perror("Connection to server failed");
         close(sockfd);
         exit(0);
     }
@@ -43,7 +43,7 @@ int main(){
     // Receiving the time data as a string from the server
     response = recv(sockfd, buff, sizeof(buff)+1, 0);
     if(response < 0){
-        perror("Receive failed!\n");
+        perror("Receive failed");
         close(sockfd);
         exit(0);
     }

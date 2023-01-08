@@ -18,6 +18,20 @@ float factor(char **s);
 float number(char **s);
 float dec_number(char **s);
 
+char *removeSpaces(char *str){
+    int len = 0;
+
+    for(int i = 0; str[i] != '\0';i++){
+        if(str[i] != ' '){
+            str[len] = str[i];
+            len++;
+        }
+    }
+
+    str[len] = '\0';
+    return str;
+}
+
 int main(){
     int sockfd, newsockfd;
     int clilen;
@@ -89,12 +103,18 @@ int main(){
                 break;
             }
         }
-        printf("Received expression: %s\n", buff);
+        printf("Received expression: %s\n", received_string);
         printf("Received bytes: %d\n", response);
 
-        // DEAL WITH THE ARITHMETIC HERE
+        // process the expression to remove whitespaces
+        received_string = removeSpaces(received_string);
+        printf("despaced string: %s\n", received_string);
 
-        response = send(newsockfd, buff, strlen(buff)+1, 0);
+        // DEAL WITH THE ARITHMETIC HERE
+        float value = expression(&received_string);
+        sprintf(received_string, "%f", value);
+
+        response = send(newsockfd, received_string, strlen(received_string)+1, 0);
         if(response < 0){
             perror("Cannot send the result");
             close(newsockfd);

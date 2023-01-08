@@ -25,7 +25,7 @@ int main(){
     struct sockaddr_in serv_addr, cli_addr;
 
     int i;
-    char *buff;
+    char buff[100];
     
     // Opening a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -62,9 +62,14 @@ int main(){
             exit(0);
         }
 
-        int offset = 0;
+        int len = 0;
+        int received_size = 100;
+        char *received_string;
+
+        received_size = (char *)malloc(sizeof(char) * received_size);
+
         while(1){
-            response = recv(newsockfd, buff+offset, 100, 0);
+            response = recv(newsockfd, buff, 100, 0);
 
             if(response < 0){
                 perror("Cannot receive data");
@@ -72,7 +77,7 @@ int main(){
                 exit(0);
             }
 
-            if(buff[offset+response-1] == '\0'){
+            if(buff[response-1] == '\0'){
                 break;
             }
 
@@ -82,14 +87,6 @@ int main(){
         printf("Received bytes: %d\n", response);
 
         // DEAL WITH THE ARITHMETIC HERE
-        char *result;
-        strcpy(result, buff);
-        printf("HELLO\n");
-        float value = expression(&result);
-        printf("%f\n", value);
-        printf("HELLO\n");
-
-        sprintf(buff, "%f", value);
 
         response = send(newsockfd, buff, strlen(buff)+1, 0);
         if(response < 0){

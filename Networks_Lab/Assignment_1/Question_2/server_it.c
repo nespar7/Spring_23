@@ -66,7 +66,7 @@ int main(){
         int received_size = 100;
         char *received_string;
 
-        received_size = (char *)malloc(sizeof(char) * received_size);
+        received_string = (char *)malloc(sizeof(char) * received_size);
 
         while(1){
             response = recv(newsockfd, buff, 100, 0);
@@ -77,11 +77,17 @@ int main(){
                 exit(0);
             }
 
+            while(len + response >= received_size){
+                received_size += 100;
+            }
+
+            received_string = realloc(received_string, received_size);
+
+            strcat(received_string, buff);
+
             if(buff[response-1] == '\0'){
                 break;
             }
-
-            offset += response;
         }
         printf("Received expression: %s\n", buff);
         printf("Received bytes: %d\n", response);

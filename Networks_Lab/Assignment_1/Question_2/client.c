@@ -9,11 +9,34 @@
 
 #define SERVER_PORT 20000
 
+char *takeInput(FILE *fp, size_t size){
+    char *str;
+    int ch;
+    size_t len = 0;
+
+    str = realloc(NULL, sizeof(*str)*size);
+    if(!str)return str;
+    ch=fgetc(fp);
+    while(EOF!=ch && ch != '\n'){
+        str[len++] = ch;
+        if(len == size){
+            size+=16;
+            str = realloc(str, sizeof(*str)*(size));
+            if(!str)return str;
+        }
+
+        ch = fgetc(fp);
+    }
+    str[len++] = '\0';
+
+    return realloc(str, sizeof(*str)*len);
+}
+
 int main(){
     int sockfd;
     int len;
     int response;
-    char buff[100];
+    char *buff;
 
     struct sockaddr_in addr;
 
@@ -37,7 +60,7 @@ int main(){
     printf("Connected to server!\n");
 
     printf("Enter the expression: ");
-    scanf("%[^\n]s", buff);
+    buff = takeInput(stdin, 10);
     printf("%s\n", buff);
 
     response = send(sockfd, buff, strlen(buff)+1, 0);
@@ -55,6 +78,8 @@ int main(){
         exit(0);
     }
     printf("Result: %s\n", buff);
+
+    free(buff);
 
     close(sockfd);
 }

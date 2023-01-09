@@ -40,46 +40,53 @@ int main(){
 
     struct sockaddr_in addr;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sockfd < 0){
-        perror("Cannot create socket");
-        exit(0);
-    }
-    printf("TCP client socket created :)\n");
+    while(1){
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if(sockfd < 0){
+            perror("Cannot create socket");
+            exit(0);
+        }
+        printf("TCP client socket created :)\n");
 
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SERVER_PORT);
-    addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(SERVER_PORT);
+        addr.sin_addr.s_addr = INADDR_ANY;
 
-    response = connect(sockfd, (struct sockaddr*) &addr, sizeof(addr));
-    if(response < 0){
-        perror("Connection to server failed");
+        response = connect(sockfd, (struct sockaddr*) &addr, sizeof(addr));
+        if(response < 0){
+            perror("Connection to server failed");
+            close(sockfd);
+            exit(0);
+        }
+        printf("Connected to server!\n");
+
+        printf("Enter the expression(Enter -1 if you wish to terminate): ");
+        buff = takeInput(stdin, 10);
+
+        if(!strcmp(buff, "-1")){
+            close(sockfd);
+            break;
+        }
+
+        response = send(sockfd, buff, strlen(buff)+1, 0);
+        if(response < 0){
+            perror("Cannot send the expression to server");
+            close(sockfd);
+            exit(0);
+        }
+        printf("Expression sent!\n");
+
+        response = recv(sockfd, buff, strlen(buff)+1, 0);
+        if(response < 0){
+            perror("Cannot receive from server");
+            close(sockfd);
+            exit(0);
+        }
+        printf("\nResult: %s\n", buff);
+
+        free(buff);
         close(sockfd);
-        exit(0);
     }
-    printf("Connected to server!\n");
-
-    printf("Enter the expression: ");
-    buff = takeInput(stdin, 10);
-    printf("%s\n", buff);
-
-    response = send(sockfd, buff, strlen(buff)+1, 0);
-    if(response < 0){
-        perror("Cannot send the expression to server");
-        close(sockfd);
-        exit(0);
-    }
-    printf("Expression sent!\n");
-
-    response = recv(sockfd, buff, strlen(buff)+1, 0);
-    if(response < 0){
-        perror("Cannot receive from server");
-        close(sockfd);
-        exit(0);
-    }
-    printf("Result: %s\n", buff);
-
-    free(buff);
 
     close(sockfd);
 }

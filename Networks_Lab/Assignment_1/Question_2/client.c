@@ -65,7 +65,7 @@ int main(){
 
         if(!strcmp(buff, "-1")){
             close(sockfd);
-            break;
+            exit(0);
         }
 
         response = send(sockfd, buff, strlen(buff)+1, 0);

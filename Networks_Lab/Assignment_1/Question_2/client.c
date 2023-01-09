@@ -74,7 +74,7 @@ int main(){
             close(sockfd);
             exit(0);
         }
-        printf("Expression sent!\n");
+        printf("\nExpression sent!\n");
 
         response = recv(sockfd, buff, strlen(buff)+1, 0);
         if(response < 0){
@@ -82,7 +82,7 @@ int main(){
             close(sockfd);
             exit(0);
         }
-        printf("\nResult: %s\n", buff);
+        printf("Result: %s\n\n", buff);
 
         free(buff);
         close(sockfd);

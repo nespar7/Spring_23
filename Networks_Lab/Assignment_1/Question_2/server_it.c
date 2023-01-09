@@ -101,11 +101,10 @@ int main(){
                 break;
             }
         }
-        printf("Received expression: %s\n", received_string);
 
         // process the expression to remove whitespaces
         received_string = removeSpaces(received_string);
-        printf("despaced string: %s\n", received_string);
+        printf("Received expression: %s\n", received_string);
 
         // Evaluate the expression and store the evaluated value into received_string
         float value = expression(&received_string);

@@ -149,12 +149,12 @@ float number(char **s){
 }
 
 float dec_number(char **s){
-    float result = (get(s)-'0')/10;
+    float result = ((float)(get(s)-'0'))/10;
     float mul = 100;
 
     char ch = peek(s);    
     while(ch >= '0' && ch <= '9'){
-        result += (get(s) - '0')/mul;
+        result += ((float)(get(s) - '0'))/mul;
         mul *= 10;
 
         ch = peek(s);

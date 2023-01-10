@@ -18,18 +18,20 @@ float number(char **s);
 float dec_number(char **s);
 char *removeSpaces(char *str);
 
-int main(){
+int main()
+{
     int sockfd, newsockfd;
     int clilen;
     int response;
     struct sockaddr_in serv_addr, cli_addr;
 
     int i;
-    char buff[100]; 
-    
+    char buff[100];
+
     // Opening a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sockfd < 0){
+    if (sockfd < 0)
+    {
         perror("Cannot create socket");
         exit(0);
     }
@@ -40,8 +42,9 @@ int main(){
     serv_addr.sin_port = htons(SERVER_PORT);
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
-    response = bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if(response < 0){
+    response = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    if (response < 0)
+    {
         perror("Unable to bind to localhost");
         exit(0);
     }
@@ -49,24 +52,27 @@ int main(){
 
     // Listen
     response = listen(sockfd, 5);
-    if(response < 0){
+    if (response < 0)
+    {
         perror("Listen failed");
         exit(0);
     }
     printf("Listening...\n");
 
     // Iterative server
-    while(1){
+    while (1)
+    {
         clilen = sizeof(cli_addr);
 
         // Connecting to client
-        newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
-        if(newsockfd < 0){
+        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        if (newsockfd < 0)
+        {
             perror("Accept failed");
             exit(0);
         }
 
-        /********************************************************************************/    
+        /********************************************************************************/
         /* The below code is to receive the unknown length string from the client       */
         /* Initialise the received_string string to a length of 100                     */
         /* Receive data(100 bytes max) and store in the buff                            */
@@ -80,16 +86,19 @@ int main(){
 
         received_string = (char *)malloc(sizeof(char) * received_size);
 
-        while(1){
+        while (1)
+        {
             response = recv(newsockfd, buff, 100, 0);
 
-            if(response < 0){
+            if (response < 0)
+            {
                 perror("Cannot receive data");
                 close(newsockfd);
                 exit(0);
             }
 
-            while(len + response >= received_size){
+            while (len + response >= received_size)
+            {
                 received_size += 100;
             }
 
@@ -97,7 +106,8 @@ int main(){
 
             strcat(received_string, buff);
 
-            if(buff[response-1] == '\0'){
+            if (buff[response - 1] == '\0')
+            {
                 break;
             }
         }
@@ -111,8 +121,9 @@ int main(){
         sprintf(received_string, "%f", value);
 
         // send the evaluated value to the client
-        response = send(newsockfd, received_string, strlen(received_string)+1, 0);
-        if(response < 0){
+        response = send(newsockfd, received_string, strlen(received_string) + 1, 0);
+        if (response < 0)
+        {
             perror("Cannot send the result");
             close(newsockfd);
             exit(0);
@@ -126,11 +137,14 @@ int main(){
 }
 
 // Function to remove white spaces from the string
-char *removeSpaces(char *str){
+char *removeSpaces(char *str)
+{
     int len = 0;
 
-    for(int i = 0; str[i] != '\0';i++){
-        if(str[i] != ' ' && str[i] != '\t'){
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] != ' ' && str[i] != '\t')
+        {
             str[len] = str[i];
             len++;
         }
@@ -141,12 +155,14 @@ char *removeSpaces(char *str){
 }
 
 // Returns the character at the start of the string
-char peek(char **s){
+char peek(char **s)
+{
     return **s;
 }
 
 // Returns the character at the start of the string and increments the pointer to the string by 1
-char get(char **s){
+char get(char **s)
+{
     return *((*s)++);
 }
 
@@ -156,13 +172,15 @@ char get(char **s){
 /* T -> (E) | -T | number | number.dec_num													*/
 /********************************************************************************************/
 
-float number(char **s){
+float number(char **s)
+{
     float result = (get(s) - '0');
 
-	// While the next character is a digit, number = number * 10 + digit
+    // While the next character is a digit, number = number * 10 + digit
     char ch = peek(s);
-    while(ch >= '0' && ch <= '9'){
-        result = 10*result + (get(s) - '0');
+    while (ch >= '0' && ch <= '9')
+    {
+        result = 10 * result + (get(s) - '0');
 
         ch = peek(s);
     }
@@ -170,13 +188,15 @@ float number(char **s){
     return result;
 }
 
-float dec_number(char **s){
-    float result = ((float)(get(s)-'0'))/10;
+float dec_number(char **s)
+{
+    float result = ((float)(get(s) - '0')) / 10;
     float mul = 100;
 
-    char ch = peek(s);    
-    while(ch >= '0' && ch <= '9'){
-        result += ((float)(get(s) - '0'))/mul;
+    char ch = peek(s);
+    while (ch >= '0' && ch <= '9')
+    {
+        result += ((float)(get(s) - '0')) / mul;
         mul *= 10;
 
         ch = peek(s);
@@ -185,26 +205,31 @@ float dec_number(char **s){
     return result;
 }
 
-float term(char **s){
+float term(char **s)
+{
     char ch = peek(s);
 
-	// T -> (E)
-    if(ch == '('){
+    // T -> (E)
+    if (ch == '(')
+    {
         get(s);
         float result = expression(s);
         get(s);
         return result;
     }
-	// T -> -T
-    else if(ch == '-'){
+    // T -> -T
+    else if (ch == '-')
+    {
         get(s);
-        return -term(s); 
+        return -term(s);
     }
-	// T -> number | number.dec_number
-    else if(ch >= '0' && ch <= '9'){
+    // T -> number | number.dec_number
+    else if (ch >= '0' && ch <= '9')
+    {
         float result = number(s);
         ch = peek(s);
-        if(ch == '.'){
+        if (ch == '.')
+        {
             get(s);
             result += dec_number(s);
         }
@@ -214,23 +239,29 @@ float term(char **s){
     return 0;
 }
 
-float expression(char **s){
+float expression(char **s)
+{
     float result = term(s);
 
     char ch = peek(s);
-	// E -> T+T | T-T | T*T | T/T
-    while(ch == '+' || ch == '-' || ch == '*' || ch == '/'){
+    // E -> T+T | T-T | T*T | T/T
+    while (ch == '+' || ch == '-' || ch == '*' || ch == '/')
+    {
         get(s);
-        if(ch == '+'){
+        if (ch == '+')
+        {
             result += term(s);
         }
-        else if(ch == '-'){
+        else if (ch == '-')
+        {
             result -= term(s);
         }
-        else if(ch == '*'){
+        else if (ch == '*')
+        {
             result *= term(s);
         }
-        else{
+        else
+        {
             result /= term(s);
         }
 

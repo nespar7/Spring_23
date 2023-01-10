@@ -1,10 +1,3 @@
-/**********************************************************************************************/
-/* References:                                                                                */
-/*  https://www.ibm.com/docs/en/i/7.1?topic=designs-example-writing-iterative-server-program  */
-/*                                                                                            */
-/*  https://forgetcode.com/c/1476-tcp-socket-date-and-time                                    */
-/**********************************************************************************************/
-
 // include statements
 #include <stdio.h>
 #include <stdlib.h>

@@ -9,6 +9,7 @@
 
 #define SERVER_PORT 20000
 
+// Function to take input of unknown size
 char *takeInput(FILE *fp, size_t size)
 {
     char *str;
@@ -48,6 +49,7 @@ int main()
 
     while (1)
     {
+        // Create socket
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0)
         {
@@ -60,6 +62,7 @@ int main()
         addr.sin_port = htons(SERVER_PORT);
         addr.sin_addr.s_addr = INADDR_ANY;
 
+        // Connect to the server
         response = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
         if (response < 0)
         {
@@ -69,15 +72,18 @@ int main()
         }
         printf("Connected to server!\n");
 
+        // Taking the expression as input
         printf("Enter the expression(Enter -1 if you wish to terminate): ");
         buff = takeInput(stdin, 10);
 
+        // if input is -1, close the socket and exit
         if (!strcmp(buff, "-1"))
         {
             close(sockfd);
             exit(0);
         }
 
+        // Send the expression to the server
         response = send(sockfd, buff, strlen(buff) + 1, 0);
         if (response < 0)
         {
@@ -87,6 +93,7 @@ int main()
         }
         printf("\nExpression sent!\n");
 
+        // Receive the evaluated value from the server
         response = recv(sockfd, buff, strlen(buff) + 1, 0);
         if (response < 0)
         {
@@ -96,6 +103,7 @@ int main()
         }
         printf("Result: %s\n\n", buff);
 
+        // Free the space allocated for buff and close the socket
         free(buff);
         close(sockfd);
     }

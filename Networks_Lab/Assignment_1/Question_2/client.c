@@ -38,21 +38,22 @@ char *takeInput(FILE *fp, size_t size)
     return realloc(str, sizeof(*str) * len);
 }
 
+// Function to send large data
 int send_data(int sockfd, const char *buff, size_t buffer_size){
     int sent = 0;
-    int left = buffer_size;
     int response;
 
-    while(sent < left){
-        response = send(sockfd, buff+sent, left, 0);
+    while(1){
+        response = send(sockfd, buff+sent, 100, 0);
         if(response < -1) {
             break;
         }
         sent += response;
-        left -= response;
+
+        if(sent >= buffer_size) break;
     }
 
-    return response == -1?-1:sent;
+    return (response < 0) ? -1 : sent;
 }
 
 int main()

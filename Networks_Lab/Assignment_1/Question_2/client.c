@@ -38,6 +38,23 @@ char *takeInput(FILE *fp, size_t size)
     return realloc(str, sizeof(*str) * len);
 }
 
+int send_data(int sockfd, const char *buff, size_t buffer_size){
+    int sent = 0;
+    int left = buffer_size;
+    int response;
+
+    while(sent < left){
+        response = send(sockfd, buff+sent, left, 0);
+        if(response < -1) {
+            break;
+        }
+        sent += response;
+        left -= response;
+    }
+
+    return response == -1?-1:sent;
+}
+
 int main()
 {
     int sockfd;
@@ -73,7 +90,7 @@ int main()
         printf("Connected to server!\n");
 
         // Taking the expression as input
-        printf("Enter the expression(Enter -1 if you wish to terminate): ");
+        printf("\nEnter the expression(Enter -1 if you wish to terminate): ");
         buff = takeInput(stdin, 10);
 
         // if input is -1, close the socket and exit
@@ -84,7 +101,7 @@ int main()
         }
 
         // Send the expression to the server
-        response = send(sockfd, buff, strlen(buff) + 1, 0);
+        response = send_data(sockfd, buff, strlen(buff) + 1);
         if (response < 0)
         {
             perror("Cannot send the expression to server");

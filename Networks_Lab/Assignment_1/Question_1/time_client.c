@@ -29,7 +29,6 @@ int main()
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(SERVER_PORT);
-    // inet_aton(INADDR_ANY, &addr.sin_addr);?
     addr.sin_addr.s_addr = INADDR_ANY;
 
     // Connecting to server

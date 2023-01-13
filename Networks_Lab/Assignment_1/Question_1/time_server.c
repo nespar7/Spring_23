@@ -32,7 +32,6 @@ int main()
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SERVER_PORT);
-    // inet_aton(INADDR_ANY, &serv_addr.sin_addr);?
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
     // Binding the server address to the socket

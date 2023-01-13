@@ -97,6 +97,7 @@ int main()
         // if input is -1, close the socket and exit
         if (!strcmp(buff, "-1"))
         {
+            printf("Bye have a nice day!\n");
             close(sockfd);
             exit(0);
         }

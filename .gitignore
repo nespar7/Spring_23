@@ -6,3 +6,7 @@ Networks_Lab/Assignment_1/Question_2/removed_codes
 .vscode
 Networks_Lab/Assignment_2/Question_1/timeserver
 Networks_Lab/Assignment_2/Question_1/timeclient
+Networks_Lab/Assignment_2/sample codes/udpclient.c
+Networks_Lab/Assignment_2/sample codes/udpserver.c
+Networks_Lab/Assignment_2/sample codes/tcpserver_conc.c
+Networks_Lab/Assignment_2/testing

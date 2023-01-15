@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <limits.h>
+#include <dirent.h>
 
 #define PORT 20000
 #define BUFFSIZE 50
@@ -48,6 +50,50 @@ char *receive_string(int sockfd){
     }
 
     return received_string;
+}
+
+int find_word(char *word){
+    char line[1024];
+
+    FILE *fp = fopen(users_file, "r");
+
+    while(fgets(line, sizeof(line), fp) != NULL){
+        if(line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+        if(!strcmp(line, word)){
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+char *dir(){
+    struct dirent *de;
+
+    DIR *dr = opendir(".");
+
+    char *result;
+    int result_size = 50;
+    int len = 0;
+
+    result = (char*)malloc(sizeof(char)*result_size);
+
+    if(dr == NULL) return result;
+
+    while((de = readdir(dr)) != NULL){
+        while(result_size < strlen(de->d_name) + 1 + len){
+            result_size += 50;
+        }
+
+        result = realloc(result, result_size);
+
+        strcat(result, de->d_name);
+        strcat(result, " ");
+    }
+
+    closedir(dr);
+    printf("%s", result);
+    return result;
 }
 
 int main(){
@@ -100,7 +146,51 @@ int main(){
             }
 
             char *username = receive_string(newsockfd);
-            printf("%s", username);
+            printf("searching for %s...\n", username);
+
+            if(find_word(username)){
+                strcpy(buff, "FOUND");
+            }
+            else{
+                strcpy(buff, "NOT-FOUND");
+            }
+            printf("%s %s\n\n", username, buff);
+
+            response = send(newsockfd, buff, strlen(buff)+1, 0);
+            if(response < 0){
+                perror("Send failed");
+                exit(EXIT_FAILURE);
+            }
+            if(!strcmp(buff, "NOT-FOUND")){
+                exit(0);
+            }
+
+            while(1){
+                char *cmd = receive_string(newsockfd);
+                printf("Received command: %s\n", cmd);
+
+                
+
+                if(!strcmp(cmd, "pwd")){
+                    char result[PATH_MAX];
+
+                    if(getcwd(result, sizeof(result)) != NULL){
+                        printf("%s\n", result);
+                        response = send(newsockfd, result, strlen(result)+1, 0);
+                    }
+                    else{
+                        perror("getcwd error");
+                    }
+                }
+                else if(!strcmp(cmd, "dir")){
+                    char *result = dir();
+                    response = send(newsockfd, result, strlen(result)+1, 0);
+                    printf("%s\n", result);
+                }
+
+                if(!strcmp(cmd, "exit")) break;
+
+            }
 
             close(newsockfd);
             exit(0);

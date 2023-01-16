@@ -14,21 +14,25 @@
 
 char *users_file = "users.txt";
 
-int send_data(int sockfd, const char *buff, size_t buffer_size){
+int send_data(int sockfd, const char *buff, size_t buffer_size)
+{
 
     printf("Send data function started\n");
 
     int sent = 0;
     int response;
 
-    while(1){
-        response = send(sockfd, buff+sent, 100, 0);
-        if(response < -1) {
+    while (1)
+    {
+        response = send(sockfd, buff + sent, 100, 0);
+        if (response < -1)
+        {
             break;
         }
         sent += response;
 
-        if(sent >= buffer_size) break;
+        if (sent >= buffer_size)
+            break;
     }
 
     return (response < 0) ? -1 : sent;
@@ -40,43 +44,46 @@ char *receive_string(int sockfd)
 
     char buff[BUFFSIZE];
     char *received_string;
-    int received_size = 50;
+    int received_size = 3;
     int len = 0;
     int response;
 
+    int cmd_received = 0;
+    int cmd_state = 0;
+
     received_string = (char *)malloc(sizeof(char) * received_size);
-    memset(received_string, 0, strlen(received_string));
+    memset(received_string, 0, 3);
 
-    while (1)
+    response = recv(sockfd, buff, 3, 0);
+
+    if (response < 0)
     {
-        response = recv(sockfd, buff, 50, 0);
-        printf("Printing buff: %s\n", buff);
-        printf("Received_string: %s\n", received_string);
-        buff[response] = '\0';
-        if (response < 0)
-        {
-            perror("Cannot receive data");
-            close(sockfd);
-            exit(0);
-        }
-
-        while (len + response >= received_size)
-        {
-            received_size += 100;
-        }
-
-        received_string = realloc(received_string, received_size);
-
-        strcat(received_string, buff);
-
-        if (buff[response - 1] == '\0')
-        {
-            break;
-        }
+        perror("Could not receive");
+        exit(0);
     }
 
-    printf("%s\n", received_string);
-    return received_string;
+    if (buff[0] == 'p')
+    {
+        cmd_state = -1;
+    }
+    else if (buff[0] == 'd')
+    {
+        cmd_state = 0;
+    }
+    else if (buff[0] == 'c')
+    {
+        cmd_state = 1;
+    }
+
+    if(cmd_state == -1){
+        // Deal with pwd;
+    }
+    else if(cmd_state == 0){
+        // Deal with dir
+    }
+    else{
+        // Deal with 
+    }
 }
 
 int find_word(char *word)
@@ -114,7 +121,8 @@ void dir(int sockfd)
 
     result = (char *)malloc(sizeof(char) * result_size);
 
-    if (dr == NULL) return;
+    if (dr == NULL)
+        return;
 
     while ((de = readdir(dr)) != NULL)
     {
@@ -224,91 +232,6 @@ int main()
             {
                 char *cmd = receive_string(newsockfd);
                 printf("Received command: %s\n", cmd);
-
-                if (!strcmp(cmd, "pwd"))
-                {
-                    char result[PATH_MAX];
-
-                    if (getcwd(result, sizeof(result)) != NULL)
-                    {
-                        printf("%s\n", result);
-                        response = send(newsockfd, result, strlen(result) + 1, 0);
-                        if (response < 0)
-                        {
-                            perror("could not send pwd");
-                            exit(0);
-                        }
-                    }
-                    else
-                    {
-                        strcpy(result, "####");
-                        response = send(newsockfd, result, strlen(result) + 1, 0);
-                        if (response < 0)
-                        {
-                            perror("could not send pwd");
-                            exit(0);
-                        }
-                    }
-                }
-                else if (!strcmp(cmd, "dir"))
-                {
-                    dir(newsockfd);
-                }
-                else if (cmd[0] == 'c' && cmd[1] == 'd')
-                {
-                    cmd += 3;
-                    if (chdir((const char *)cmd) != 0)
-                    {
-                        char result[50];
-                        strcpy(result, "####");
-                        response = send(newsockfd, result, strlen(result) + 1, 0);
-                        if (response < 0)
-                        {
-                            perror("could not send pwd");
-                            exit(0);
-                        }
-                    }
-                    else
-                    {
-                        char result[PATH_MAX];
-                        if (getcwd(result, sizeof(result)) != NULL)
-                        {
-                            printf("%s\n", result);
-                            response = send(newsockfd, result, strlen(result) + 1, 0);
-                            if (response < 0)
-                            {
-                                perror("could not send pwd");
-                                exit(0);
-                            }
-                        }
-                        else
-                        {
-                            strcpy(result, "####");
-                            response = send(newsockfd, result, strlen(result) + 1, 0);
-                            if (response < 0)
-                            {
-                                perror("could not send error message");
-                                exit(0);
-                            }
-                        }
-                    }
-                }
-                else if (!strcmp(cmd, "exit"))
-                {
-                    free(cmd);
-                    break;
-                }
-                else
-                {
-                    char result[5];
-                    strcpy(result, "$$$$");
-                    response = send(newsockfd, result, strlen(result) + 1, 0);
-                    if (response < 0)
-                    {
-                        perror("could not send pwd");
-                        exit(0);
-                    }
-                }
             }
 
             close(newsockfd);

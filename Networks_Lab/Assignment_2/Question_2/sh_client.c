@@ -11,7 +11,7 @@
 #define BUFFSIZE 50
 
 char *receive_string(int sockfd){
-    char buff[BUFFSIZE];
+    char buff[50];
     char *received_string;
     int received_size = 50;
     int len = 0;
@@ -30,6 +30,7 @@ char *receive_string(int sockfd){
             exit(0);
         }
 
+        buff[response] = '\0';
         while (len + response >= received_size)
         {
             received_size += 100;
@@ -38,6 +39,7 @@ char *receive_string(int sockfd){
         received_string = realloc(received_string, received_size);
 
         strcat(received_string, buff);
+
 
         if (buff[response - 1] == '\0')
         {
@@ -131,11 +133,11 @@ int main(){
     }
 
     printf("Hello %s\n\n", username);
+    free(username);
 
     while(1){
         printf("Enter command: ");
         char *cmd = takeInput(stdin, 50);
-
 
         response = send(sockfd, cmd, strlen(cmd)+1, 0);
         if(response < 0){
@@ -146,13 +148,27 @@ int main(){
 
         if(!strcmp(cmd, "exit")){
             printf("Bye have a nice day :)\n");
-            exit(0);
+            break;
         }
+
+        free(cmd);
 
         char *result = receive_string(sockfd);
 
-        printf("%s\n", result);
+        if(!strcmp(result, "$$$$")){
+            printf("Invalid command\n");
+        }
+        else if(!strcmp(result, "####")){
+            printf("Error in running command\n");
+        }
+        else{
+            printf("%s\n", result);
+        }
+
+        free(result);
     }
 
     close(sockfd);
+
+    return 0;
 }

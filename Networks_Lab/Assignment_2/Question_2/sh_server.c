@@ -38,10 +38,103 @@ int send_data(int sockfd, const char *buff, size_t buffer_size)
     return (response < 0) ? -1 : sent;
 }
 
-char *receive_string(int sockfd)
+void change_directory(int sockfd, char buff[BUFFSIZE], int is_end)
 {
-    printf("Receive string function started\n");
+    printf("Entered chdir\n");
 
+    char path[PATH_MAX];
+
+    printf("%ld\n", strlen(buff));
+
+    int j = 0;
+    for (int i = 3; i < strlen(buff); i++)
+    {
+        printf("Entered for loop");
+        path[j++] = buff[i];
+        printf("%s\n", path);
+        if (buff[i] == '/')
+        {
+            chdir(path);
+            j = 0;
+            memset(path, 0, strlen(path));
+        }
+    }
+
+    if (!is_end)
+    {
+        printf("Hello\n");
+        while (1)
+        {
+            int response = recv(sockfd, buff, BUFFSIZE, 0);
+            if (response < 0)
+            {
+                perror("Receive error");
+                exit(EXIT_FAILURE);
+            }
+
+            for (int i = 4; i < strlen(buff); i++)
+            {
+                path[j++] = buff[i];
+                if (buff[i] == '/')
+                {
+                    chdir(path);
+                    j = 0;
+                    memset(path, 0, strlen(path));
+                }
+            }
+
+            if (buff[response - 1] == '\0')
+                break;
+        }
+    }
+
+    printf("%s\n", path);
+    chdir(path);
+
+    return;
+}
+
+char *receive_username(int sockfd)
+{
+    int len = 0;
+    int received_size = 100;
+    char *received_string;
+
+    char buff[BUFFSIZE];
+    received_string = (char *)malloc(sizeof(char) * received_size);
+
+    while (1)
+    {
+        int response = recv(sockfd, buff, BUFFSIZE, 0);
+        buff[response] = '\0';
+
+        if (response < 0)
+        {
+            perror("Cannot receive data");
+            close(sockfd);
+            exit(0);
+        }
+
+        while (len + response >= received_size)
+        {
+            received_size += 100;
+        }
+
+        received_string = realloc(received_string, received_size);
+
+        strcat(received_string, buff);
+
+        if (buff[response - 1] == '\0')
+        {
+            break;
+        }
+    }
+
+    return received_string;
+}
+
+char *receive_command(int sockfd)
+{
     char buff[BUFFSIZE];
     char *received_string;
     int received_size = 3;
@@ -54,7 +147,7 @@ char *receive_string(int sockfd)
     received_string = (char *)malloc(sizeof(char) * received_size);
     memset(received_string, 0, 3);
 
-    response = recv(sockfd, buff, 3, 0);
+    response = recv(sockfd, buff, 50, 0);
 
     if (response < 0)
     {
@@ -62,28 +155,52 @@ char *receive_string(int sockfd)
         exit(0);
     }
 
-    if (buff[0] == 'p')
+    char ch = buff[0];
+
+    if (ch == 'e')
     {
-        cmd_state = -1;
+        return "1";
     }
-    else if (buff[0] == 'd')
+    else if (ch == 'p')
     {
-        cmd_state = 0;
+        // Deal with pwd;
+
+        char result[PATH_MAX];
+
+        if (getcwd(result, sizeof(result)) == NULL)
+        {
+            send_data(sockfd, "####", 5);
+        }
+        else
+        {
+            send_data(sockfd, result, strlen(result) + 1);
+        }
+
+        // Also deal with if received length is less than 3
     }
+    // else if (buff[0] == 'd')
+    // {
+
+    // }
     else if (buff[0] == 'c')
     {
-        cmd_state = 1;
+        printf("%s\n", buff);
+        change_directory(sockfd, buff, buff[response-1] == '\0');
+        printf("Got out\n");
+
+        char result[PATH_MAX];
+
+        if (getcwd(result, sizeof(result)) == NULL)
+        {
+            send_data(sockfd, "####", 5);
+        }
+        else
+        {
+            send_data(sockfd, result, strlen(result) + 1);
+        }
     }
 
-    if(cmd_state == -1){
-        // Deal with pwd;
-    }
-    else if(cmd_state == 0){
-        // Deal with dir
-    }
-    else{
-        // Deal with 
-    }
+    return NULL;
 }
 
 int find_word(char *word)
@@ -107,44 +224,6 @@ int find_word(char *word)
     return 0;
 }
 
-void dir(int sockfd)
-{
-    printf("Dir function started\n");
-
-    struct dirent *de;
-
-    DIR *dr = opendir(".");
-
-    char *result;
-    int result_size = 50;
-    int len = 0;
-
-    result = (char *)malloc(sizeof(char) * result_size);
-
-    if (dr == NULL)
-        return;
-
-    while ((de = readdir(dr)) != NULL)
-    {
-        while (result_size < strlen(de->d_name) + 1 + len)
-        {
-            result_size += 50;
-        }
-
-        printf("%d\n", result_size);
-        result = realloc(result, result_size);
-
-        strcat(result, de->d_name);
-        strcat(result, " ");
-    }
-
-    printf("%s\n", result);
-    send(sockfd, "HELLO", 6, 0);
-
-    closedir(dr);
-    free(result);
-}
-
 int main()
 {
     int sockfd, newsockfd;
@@ -160,7 +239,7 @@ int main()
         perror("Could not create socket");
         exit(EXIT_FAILURE);
     }
-    printf("Socket created\n");
+    printf("Socket created\n\n");
 
     // bind
     servaddr.sin_family = AF_INET;
@@ -201,7 +280,7 @@ int main()
                 exit(EXIT_FAILURE);
             }
 
-            char *username = receive_string(newsockfd);
+            char *username = receive_username(newsockfd);
             printf("searching for %s...\n", username);
 
             if (find_word(username))
@@ -226,12 +305,15 @@ int main()
                 exit(0);
             }
 
-            free(username);
-
             while (1)
             {
-                char *cmd = receive_string(newsockfd);
-                printf("Received command: %s\n", cmd);
+                char *cmd = receive_command(newsockfd);
+
+                if (cmd != NULL)
+                {
+                    printf("%s logging out\n", username);
+                    break;
+                }
             }
 
             close(newsockfd);

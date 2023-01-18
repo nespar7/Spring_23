@@ -148,6 +148,7 @@ int main(){
             }
             printf("%s %s\n\n", username, buff);
 
+            printf("%s %ld\n", buff, strlen(buff)+1);
             response = send(newsockfd, buff, strlen(buff)+1, 0);
             if(response < 0){
                 perror("Send failed");

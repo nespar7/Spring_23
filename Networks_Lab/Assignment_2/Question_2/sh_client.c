@@ -9,15 +9,14 @@
 
 #define PORT 20000
 #define BUFFSIZE 50
+#define RECSIZE 200
 
 char *receive_string(int sockfd){
     char buff[BUFFSIZE];
     char *received_string;
-    int received_size = 50;
-    int len = 0;
     int response;
 
-    received_string = (char *)malloc(sizeof(char)*received_size);
+    received_string = (char *)malloc(sizeof(char)*RECSIZE);
 
     while (1)
     {
@@ -29,13 +28,6 @@ char *receive_string(int sockfd){
             close(sockfd);
             exit(0);
         }
-
-        while (len + response >= received_size)
-        {
-            received_size += 100;
-        }
-
-        received_string = realloc(received_string, received_size);
 
         strcat(received_string, buff);
 
@@ -110,21 +102,18 @@ int main(){
 
     char *username = takeInput(stdin, 50);
 
-    response = send(sockfd, username, strlen(username)+1, 0);
+    response = send_data(sockfd, username, strlen(username)+1);
     if(response < 0){
         perror("Could not send username");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
 
-    response = recv(sockfd, buff, BUFFSIZE, 0);
-    if(response < 0){
-        perror("Could not receive username status");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
+    char *search_result = receive_string(sockfd);
+    
+    printf("%s\n", search_result);
 
-    if(!strcmp(buff, "NOT-FOUND")){
+    if(!strcmp(search_result, "NOT-FOUND")){
         printf("Invalid username\n");
         close(sockfd);
         exit(EXIT_FAILURE);

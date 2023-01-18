@@ -102,7 +102,7 @@ int main(){
 
     char *username = takeInput(stdin, 50);
 
-    response = send_data(sockfd, username, strlen(username)+1);
+    response = send(sockfd, username, strlen(username)+1, 0);
     if(response < 0){
         perror("Could not send username");
         close(sockfd);

@@ -11,17 +11,16 @@
 
 #define PORT 20000
 #define BUFFSIZE 50
+#define RECSIZE 200
 
 char *users_file = "users.txt";
 
 char *receive_string(int sockfd){
     char buff[BUFFSIZE];
     char *received_string;
-    int received_size = 50;
-    int len = 0;
     int response;
 
-    received_string = (char *)malloc(sizeof(char)*received_size);
+    received_string = (char *)malloc(sizeof(char)*RECSIZE);
 
     while (1)
     {
@@ -33,13 +32,6 @@ char *receive_string(int sockfd){
             close(sockfd);
             exit(0);
         }
-
-        while (len + response >= received_size)
-        {
-            received_size += 100;
-        }
-
-        received_string = realloc(received_string, received_size);
 
         strcat(received_string, buff);
 
@@ -169,8 +161,6 @@ int main(){
                 char *cmd = receive_string(newsockfd);
                 printf("Received command: %s\n", cmd);
 
-                
-
                 if(!strcmp(cmd, "pwd")){
                     char result[PATH_MAX];
 
@@ -187,8 +177,12 @@ int main(){
                     response = send(newsockfd, result, strlen(result)+1, 0);
                     printf("%s\n", result);
                 }
-
-                if(!strcmp(cmd, "exit")) break;
+                else if(cmd[0] == 'c' && cmd[1] == 'h' && cmd[2] == ' '){
+                    // Deal with chdir
+                }
+                else if(!strcmp(cmd, "exit")) {
+                    break;
+                }
 
             }
 

@@ -59,35 +59,6 @@ int find_word(char *word){
     return 0;
 }
 
-char *dir(){
-    struct dirent *de;
-
-    DIR *dr = opendir(".");
-
-    char *result;
-    int result_size = 50;
-    int len = 0;
-
-    result = (char*)malloc(sizeof(char)*result_size);
-
-    if(dr == NULL) return result;
-
-    while((de = readdir(dr)) != NULL){
-        while(result_size < strlen(de->d_name) + 1 + len){
-            result_size += 50;
-        }
-
-        result = realloc(result, result_size);
-
-        strcat(result, de->d_name);
-        strcat(result, " ");
-    }
-
-    closedir(dr);
-    printf("%s", result);
-    return result;
-}
-
 int main(){
     int sockfd, newsockfd;
     int clilen;
@@ -174,14 +145,14 @@ int main(){
                     }
                 }
                 else if(!strcmp(cmd, "dir")){
-                    char *result = dir();
-                    response = send(newsockfd, result, strlen(result)+1, 0);
-                    printf("%s\n", result);
+                    
                 }
                 else if(cmd[0] == 'c' && cmd[1] == 'h' && cmd[2] == ' '){
                     // Deal with chdir
+
                 }
                 else if(!strcmp(cmd, "exit")) {
+                    printf("%s logging out\n", username);
                     break;
                 }
 

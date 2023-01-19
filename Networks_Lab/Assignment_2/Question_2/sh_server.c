@@ -15,6 +15,19 @@
 
 char *users_file = "users.txt";
 
+int send_data(int sockfd, char *buffer, int bufsize)
+{
+    const char *pbuffer = (const char*) buffer;
+    while (bufsize > 0)
+    {
+        int n = send(sockfd, pbuffer, bufsize, 0);
+        if (n < 0) return -1;
+        pbuffer += n;
+        bufsize -= n;
+    }
+    return 0;
+}
+
 char *receive_string(int sockfd)
 {
     char buff[BUFFSIZE];
@@ -165,7 +178,7 @@ int main()
                     if (getcwd(result, sizeof(result)) != NULL)
                     {
                         printf("%s\n", result);
-                        response = send(newsockfd, result, strlen(result) + 1, 0);
+                        response = send_data(newsockfd, result, strlen(result) + 1);
                     }
                     else
                     {

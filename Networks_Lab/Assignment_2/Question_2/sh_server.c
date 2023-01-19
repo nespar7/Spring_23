@@ -20,10 +20,10 @@ int send_data(int sockfd, char *buffer, int bufsize)
     const char *pbuffer = (const char*) buffer;
     while (bufsize > 0)
     {
-        int n = send(sockfd, pbuffer, bufsize, 0);
-        if (n < 0) return -1;
-        pbuffer += n;
-        bufsize -= n;
+        int response = send(sockfd, pbuffer, bufsize, 0);
+        if (response < 0) return -1;
+        pbuffer += response;
+        bufsize -= response;
     }
     return 0;
 }

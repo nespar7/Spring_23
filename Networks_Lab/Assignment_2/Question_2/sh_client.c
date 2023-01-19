@@ -11,6 +11,19 @@
 #define BUFFSIZE 50
 #define RECSIZE 200
 
+int send_data(int sockfd, char *buffer, int bufsize)
+{
+    const char *pbuffer = (const char*) buffer;
+    while (bufsize > 0)
+    {
+        int response = send(sockfd, pbuffer, bufsize, 0);
+        if (response < 0) return -1;
+        pbuffer += response;
+        bufsize -= response;
+    }
+    return 0;
+}
+
 char *receive_string(int sockfd){
     char buff[BUFFSIZE];
     char *received_string;

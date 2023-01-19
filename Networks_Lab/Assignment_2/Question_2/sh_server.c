@@ -20,7 +20,7 @@ int send_data(int sockfd, char *buffer, int bufsize)
     const char *pbuffer = (const char*) buffer;
     while (bufsize > 0)
     {
-        int response = send(sockfd, pbuffer, bufsize, 0);
+        int response = send(sockfd, pbuffer, min(50, bufsize), 0);
         if (response < 0) return -1;
         pbuffer += response;
         bufsize -= response;
@@ -187,7 +187,7 @@ int main()
                 }
                 else if (!strcmp(cmd, "dir"))
                 {
-                    printf("HELLO");
+                    r
                 }
                 else if (cmd[0] == 'c' && cmd[1] == 'd')
                 {

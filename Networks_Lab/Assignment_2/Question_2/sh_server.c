@@ -15,13 +15,19 @@
 
 char *users_file = "users.txt";
 
+int minimum(int x)
+{
+    return x < BUFFSIZE ? x : BUFFSIZE;
+}
+
 int send_data(int sockfd, char *buffer, int bufsize)
 {
-    const char *pbuffer = (const char*) buffer;
+    const char *pbuffer = (const char *)buffer;
     while (bufsize > 0)
     {
-        int response = send(sockfd, pbuffer, min(50, bufsize), 0);
-        if (response < 0) return -1;
+        int response = send(sockfd, pbuffer, minimum(bufsize), 0);
+        if (response < 0)
+            return -1;
         pbuffer += response;
         bufsize -= response;
     }
@@ -38,7 +44,7 @@ char *receive_string(int sockfd)
 
     while (1)
     {
-        response = recv(sockfd, buff, 50, 0);
+        response = recv(sockfd, buff, BUFFSIZE, 0);
 
         if (response < 0)
         {
@@ -136,7 +142,7 @@ int main()
             close(sockfd);
             strcpy(buff, "LOGIN:");
 
-            response = send(newsockfd, buff, strlen(buff) + 1, 0);
+            response = send_data(newsockfd, buff, strlen(buff) + 1);
             if (response < 0)
             {
                 perror("Send failed");
@@ -155,7 +161,7 @@ int main()
                 strcpy(buff, "NOT-FOUND");
             }
 
-            response = send(newsockfd, buff, strlen(buff) + 1, 0);
+            response = send_data(newsockfd, buff, strlen(buff) + 1);
             if (response < 0)
             {
                 perror("Send failed");
@@ -182,12 +188,13 @@ int main()
                     }
                     else
                     {
-                        response = send(newsockfd, "####", 5, 0);
+                        response = send_data(newsockfd, "####", 5);
                     }
                 }
                 else if (!strcmp(cmd, "dir"))
                 {
-                    r
+                    // r
+                    printf("HELLO");
                 }
                 else if (cmd[0] == 'c' && cmd[1] == 'd')
                 {
@@ -196,11 +203,11 @@ int main()
                     {
                         if (chdir("/home") != 0)
                         {
-                            response = send(newsockfd, "####", 5, 0);
+                            response = send_data(newsockfd, "####", 5);
                         }
                         else
                         {
-                            response = send(newsockfd, "cd", 3, 0);
+                            response = send_data(newsockfd, "cd", 3);
                         }
                     }
                     else if (cmd[2] == ' ')
@@ -208,16 +215,16 @@ int main()
                         // Deal with chdir
                         if (change_dir(cmd + 3) != 0)
                         {
-                            response = send(newsockfd, "####", 5, 0);
+                            response = send_data(newsockfd, "####", 5);
                         }
                         else
                         {
-                            response = send(newsockfd, "cd", 3, 0);
+                            response = send_data(newsockfd, "cd", 3);
                         }
                     }
                     else
                     {
-                        response = send(newsockfd, "$$$$", 5, 0);
+                        response = send_data(newsockfd, "$$$$", 5);
                     }
                 }
                 else if (!strcmp(cmd, "exit"))

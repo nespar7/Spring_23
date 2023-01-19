@@ -59,6 +59,14 @@ int find_word(char *word){
     return 0;
 }
 
+int change_dir(char *s){
+    if(chdir(s) != 0){
+        return -1;
+    }
+
+    return 0;
+}
+
 int main(){
     int sockfd, newsockfd;
     int clilen;
@@ -141,14 +149,34 @@ int main(){
                         response = send(newsockfd, result, strlen(result)+1, 0);
                     }
                     else{
-                        perror("getcwd error");
+                        response = send(newsockfd, "####", 5, 0);
                     }
                 }
                 else if(!strcmp(cmd, "dir")){
-                    
+                    printf("HELLO");   
                 }
-                else if(cmd[0] == 'c' && cmd[1] == 'h' && cmd[2] == ' '){
-                    // Deal with chdir
+                else if(cmd[0] == 'c' && cmd[1] == 'd'){
+
+                    if(strlen(cmd) == 2){
+                        if(chdir("/home") != 0){
+                            response = send(newsockfd, "####", 5, 0);
+                        }
+                        else{
+                            response = send(newsockfd, "cd", 3, 0);
+                        }
+                    }
+                    else if(cmd[2] == ' '){
+                        // Deal with chdir
+                        if(change_dir(cmd+3) != 0){
+                            response = send(newsockfd, "####", 5, 0);
+                        }
+                        else{
+                            response = send(newsockfd, "cd", 3, 0);
+                        }
+                    }
+                    else{
+                        response = send(newsockfd, "$$$$", 5, 0);
+                    }
 
                 }
                 else if(!strcmp(cmd, "exit")) {

@@ -21,7 +21,7 @@ char *receive_string(int sockfd){
     while (1)
     {
         response = recv(sockfd, buff, 50, 0);
-
+        buff[response] = '\0';
         if (response < 0)
         {
             perror("Cannot receive data");

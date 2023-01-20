@@ -324,7 +324,7 @@ int main()
                 }
                 else if (!strcmp(cmd, "exit"))
                 {
-                    printf("%s logging out\n", username);
+                    printf("%s logging out\n\n", username);
                     break;
                 }
                 else{

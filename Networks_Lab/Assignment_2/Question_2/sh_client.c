@@ -102,7 +102,7 @@ int main(){
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-    printf("Connected to server!\n");
+    printf("Connected to server!\n\n");
 
     response = recv(sockfd, buff, BUFFSIZE, 0);
     if(response < 0){
@@ -115,7 +115,7 @@ int main(){
 
     char *username = takeInput(stdin, 50);
 
-    response = send(sockfd, username, strlen(username)+1, 0);
+    response = send_data(sockfd, username, strlen(username)+1);
     if(response < 0){
         perror("Could not send username");
         close(sockfd);
@@ -123,8 +123,6 @@ int main(){
     }
 
     char *search_result = receive_string(sockfd);
-    
-    printf("%s\n", search_result);
 
     if(!strcmp(search_result, "NOT-FOUND")){
         printf("Invalid username\n");
@@ -139,21 +137,31 @@ int main(){
         char *cmd = takeInput(stdin, 50);
 
 
-        response = send(sockfd, cmd, strlen(cmd)+1, 0);
+        response = send_data(sockfd, cmd, strlen(cmd)+1);
         if(response < 0){
             perror("Could not send command");
             close(sockfd);
             exit(EXIT_FAILURE);
         }
 
-        if(!strcmp(cmd, "exit")){
+        if(!strcmp("exit", cmd)){
             printf("Bye have a nice day :)\n");
             exit(0);
         }
 
         char *result = receive_string(sockfd);
-
-        printf("%s\n", result);
+        if(!strcmp(result, "1")){
+            printf("Changed directory\n");
+        }
+        else if(!strcmp(result, "$$$$")){
+            printf("Invalid command\n");
+        }
+        else if(!strcmp(result, "####")){
+            printf("Error in running command\n");
+        }
+        else{
+            printf("%s\n", result);
+        }
     }
 
     close(sockfd);

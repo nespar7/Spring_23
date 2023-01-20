@@ -11,7 +11,6 @@
 
 #define PORT 20000
 #define BUFFSIZE 50
-#define RECSIZE 200
 
 char *users_file = "users.txt";
 
@@ -40,7 +39,9 @@ char *receive_string(int sockfd)
     char *received_string;
     int response;
 
-    received_string = (char *)malloc(sizeof(char) * RECSIZE);
+    received_string = (char *)malloc(sizeof(char) * BUFFSIZE);
+    int stored = 0;
+    int allocated = BUFFSIZE;
 
     while (1)
     {
@@ -53,7 +54,18 @@ char *receive_string(int sockfd)
             exit(0);
         }
 
+        int changed = 0;
+        while(stored + response > allocated){
+            allocated += BUFFSIZE;
+            changed = 1;
+        }
+
+        if(changed){
+            received_string = realloc(received_string, allocated);
+        }
+    
         strcat(received_string, buff);
+        stored += response;
 
         if (buff[response - 1] == '\0')
         {
@@ -62,6 +74,36 @@ char *receive_string(int sockfd)
     }
 
     return received_string;
+}
+
+char *removeSpaces(char *str)
+{
+    int len = 0;
+    int space_encountered = 0;
+
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if(!space_encountered){
+            str[len++] = str[i];
+            if(str[i] == ' ' || str[i] == '\t'){
+                while(str[i] == ' ' || str[i] == '\t'){
+                    i++;
+                }
+                space_encountered = 1; 
+                i--;
+            }
+        }
+        else{
+            str[len++] = str[i];
+        }
+
+    }
+
+    if(str[len-1] == ' ' || str[len-1] == '\t'){
+        str[len-1] = '\0';
+    }
+    str[len] = '\0';
+    return str;
 }
 
 int find_word(char *word)
@@ -93,6 +135,53 @@ int change_dir(char *s)
     return 0;
 }
 
+void list_dir(int sockfd, char *arg){
+    DIR *dir;
+    struct dirent *entry;
+
+    dir = opendir(arg);
+
+    if(dir == NULL){
+        send_data(sockfd, "####", 5);
+    }
+    else{
+        char *result;
+        result = (char*)malloc(sizeof(char)*BUFFSIZE);
+        int stored = 0;
+        int allocated = BUFFSIZE;
+
+        entry = readdir(dir);
+        while(entry != NULL){
+            char *name = entry->d_name;
+            if(!strcmp(name, ".") || !strcmp(name, "..")) {
+                entry = readdir(dir);
+                continue;
+            }
+            int entry_length = strlen(name);
+
+            int changed = 0;
+            while(stored + entry_length + 2 > allocated){
+                allocated += BUFFSIZE;
+                changed = 1;
+            }
+
+            if(changed){
+                result = realloc(result, allocated);
+            }
+
+            strcat(result, name);
+            stored += entry_length;
+
+            result[stored++] = ' ';
+            result[stored++] = ' ';
+
+            entry = readdir(dir);
+        }
+
+        int response = send_data(sockfd, result, strlen(result)+1);
+    }
+}
+
 int main()
 {
     int sockfd, newsockfd;
@@ -108,7 +197,7 @@ int main()
         perror("Could not create socket");
         exit(EXIT_FAILURE);
     }
-    printf("Socket created\n");
+    printf("Created socket\n");
 
     // bind
     servaddr.sin_family = AF_INET;
@@ -175,15 +264,17 @@ int main()
             while (1)
             {
                 char *cmd = receive_string(newsockfd);
-                printf("Received command: %s\n", cmd);
+                cmd = removeSpaces(cmd);
 
-                if (!strcmp(cmd, "pwd"))
+                if(strlen(cmd) < 2){
+                    response = send_data(newsockfd, "####", 5);
+                }
+                else if (!strcmp(cmd, "pwd"))
                 {
                     char result[PATH_MAX];
 
                     if (getcwd(result, sizeof(result)) != NULL)
                     {
-                        printf("%s\n", result);
                         response = send_data(newsockfd, result, strlen(result) + 1);
                     }
                     else
@@ -191,12 +282,16 @@ int main()
                         response = send_data(newsockfd, "####", 5);
                     }
                 }
-                else if (!strcmp(cmd, "dir"))
+                else if (strlen(cmd) >= 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r')
                 {
-                    // r
-                    printf("HELLO");
+                    if(strlen(cmd) == 3){
+                        list_dir(newsockfd, ".");
+                    }
+                    else{
+                        list_dir(newsockfd, cmd+4);
+                    }
                 }
-                else if (cmd[0] == 'c' && cmd[1] == 'd')
+                else if (strlen(cmd) >= 2 && cmd[0] == 'c' && cmd[1] == 'd')
                 {
 
                     if (strlen(cmd) == 2)
@@ -207,7 +302,7 @@ int main()
                         }
                         else
                         {
-                            response = send_data(newsockfd, "cd", 3);
+                            response = send_data(newsockfd, "1", 2);
                         }
                     }
                     else if (cmd[2] == ' ')
@@ -219,7 +314,7 @@ int main()
                         }
                         else
                         {
-                            response = send_data(newsockfd, "cd", 3);
+                            response = send_data(newsockfd, "1", 2);
                         }
                     }
                     else
@@ -230,8 +325,10 @@ int main()
                 else if (!strcmp(cmd, "exit"))
                 {
                     printf("%s logging out\n", username);
-                    free(cmd);
                     break;
+                }
+                else{
+                    response = send_data(newsockfd, "$$$$", 5);
                 }
             }
 

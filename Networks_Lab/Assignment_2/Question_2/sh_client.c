@@ -9,34 +9,38 @@
 
 #define PORT 20000
 #define BUFFSIZE 50
+#define RECSIZE 200
+
+int send_data(int sockfd, char *buffer, int bufsize)
+{
+    const char *pbuffer = (const char*) buffer;
+    while (bufsize > 0)
+    {
+        int response = send(sockfd, pbuffer, bufsize, 0);
+        if (response < 0) return -1;
+        pbuffer += response;
+        bufsize -= response;
+    }
+    return 0;
+}
 
 char *receive_string(int sockfd){
     char buff[50];
     char *received_string;
-    int received_size = 50;
-    int len = 0;
     int response;
 
-    received_string = (char *)malloc(sizeof(char)*received_size);
+    received_string = (char *)malloc(sizeof(char)*RECSIZE);
 
     while (1)
     {
         response = recv(sockfd, buff, 50, 0);
-
+        buff[response] = '\0';
         if (response < 0)
         {
             perror("Cannot receive data");
             close(sockfd);
             exit(0);
         }
-
-        buff[response] = '\0';
-        while (len + response >= received_size)
-        {
-            received_size += 100;
-        }
-
-        received_string = realloc(received_string, received_size);
 
         strcat(received_string, buff);
 
@@ -99,7 +103,7 @@ int main(){
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-    printf("Connected to server!\n");
+    printf("Connected to server!\n\n");
 
     response = recv(sockfd, buff, BUFFSIZE, 0);
     if(response < 0){
@@ -112,21 +116,16 @@ int main(){
 
     char *username = takeInput(stdin, 50);
 
-    response = send(sockfd, username, strlen(username)+1, 0);
+    response = send_data(sockfd, username, strlen(username)+1);
     if(response < 0){
         perror("Could not send username");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
 
-    response = recv(sockfd, buff, BUFFSIZE, 0);
-    if(response < 0){
-        perror("Could not receive username status");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
+    char *search_result = receive_string(sockfd);
 
-    if(!strcmp(buff, "NOT-FOUND")){
+    if(!strcmp(search_result, "NOT-FOUND")){
         printf("Invalid username\n");
         close(sockfd);
         exit(EXIT_FAILURE);
@@ -139,14 +138,15 @@ int main(){
         printf("Enter command: ");
         char *cmd = takeInput(stdin, 50);
 
-        response = send(sockfd, cmd, strlen(cmd)+1, 0);
+
+        response = send_data(sockfd, cmd, strlen(cmd)+1);
         if(response < 0){
             perror("Could not send command");
             close(sockfd);
             exit(EXIT_FAILURE);
         }
 
-        if(!strcmp(cmd, "exit")){
+        if(!strcmp("exit", cmd)){
             printf("Bye have a nice day :)\n");
             break;
         }
@@ -154,8 +154,10 @@ int main(){
         free(cmd);
 
         char *result = receive_string(sockfd);
-
-        if(!strcmp(result, "$$$$")){
+        if(!strcmp(result, "1")){
+            printf("Changed directory\n");
+        }
+        else if(!strcmp(result, "$$$$")){
             printf("Invalid command\n");
         }
         else if(!strcmp(result, "####")){
@@ -164,8 +166,6 @@ int main(){
         else{
             printf("%s\n", result);
         }
-
-        free(result);
     }
 
     close(sockfd);

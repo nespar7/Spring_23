@@ -11,6 +11,7 @@
 #define BUFFSIZE 50
 #define RECSIZE 200
 
+// function to send data in chunks of 50 or less than 50
 int send_data(int sockfd, char *buffer, int bufsize)
 {
     const char *pbuffer = (const char*) buffer;
@@ -24,6 +25,28 @@ int send_data(int sockfd, char *buffer, int bufsize)
     return 0;
 }
 
+// Function to receive directory data
+void receive_dir(int sockfd){
+    char buff[BUFFSIZE];
+    int response;
+
+    while (1)
+    {
+        response = recv(sockfd, buff, 50, 0);
+        buff[response] = '\0';
+
+        printf("%s", buff);
+
+        if (buff[response - 1] == '\0')
+        {
+            break;
+        }
+    }
+
+    printf("\n");
+}
+
+// Function to receive data in chunks of less than 50 size
 char *receive_string(int sockfd){
     char buff[BUFFSIZE];
     char *received_string;
@@ -111,10 +134,12 @@ int main(){
         exit(EXIT_FAILURE);
     }   
 
+    // Print the LOGIN: string 
     printf("%s ", buff);
 
     char *username = takeInput(stdin, 50);
 
+    // Send the username for search and if not found, exit
     response = send_data(sockfd, username, strlen(username)+1);
     if(response < 0){
         perror("Could not send username");
@@ -132,6 +157,7 @@ int main(){
 
     printf("Hello %s\n\n", username);
 
+    // Take commands until exit is received
     while(1){
         printf("Enter command: ");
         char *cmd = takeInput(stdin, 50);
@@ -149,19 +175,31 @@ int main(){
             exit(0);
         }
 
-        char *result = receive_string(sockfd);
-        if(!strcmp(result, "1")){
-            printf("Changed directory\n");
-        }
-        else if(!strcmp(result, "$$$$")){
-            printf("Invalid command\n");
-        }
-        else if(!strcmp(result, "####")){
-            printf("Error in running command\n");
+        // For dir
+        if((strlen(cmd) == 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r') || (strlen(cmd) >= 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r' && cmd[3] == ' ')){
+            receive_dir(sockfd);
         }
         else{
-            printf("%s\n", result);
+            char *result;
+            result = receive_string(sockfd);
+            // If the result received is 1, then the directory has changed
+            if(!strcmp(result, "1")){
+                printf("Changed directory\n");
+            }
+            // $$$$ invalid command
+            else if(!strcmp(result, "$$$$")){
+                printf("Invalid command\n");
+            }
+            // #### error
+            else if(!strcmp(result, "####")){
+                printf("Error in running command\n");
+            }
+            // Print result
+            else{
+                printf("%s\n", result);
+            }
         }
+
     }
 
     close(sockfd);

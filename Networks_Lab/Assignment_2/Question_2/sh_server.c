@@ -12,37 +12,42 @@
 #define PORT 20000
 #define BUFFSIZE 50
 
-char *users_file = "users.txt";
-
 int minimum(int x)
 {
     return x < BUFFSIZE ? x : BUFFSIZE;
 }
 
-int send_data(int sockfd, char *buffer, int bufsize)
+// function to send data in chunks of 50 or less than 50
+int send_data(int sockfd, char *buffer, int buffsize)
 {
-    const char *pbuffer = (const char *)buffer;
-    while (bufsize > 0)
+    const char *temp = (const char *)buffer;
+
+    // while buffer still has data, send 50 or buffsize(minimum of) number of bytes
+    while (buffsize > 0)
     {
-        int response = send(sockfd, pbuffer, minimum(bufsize), 0);
-        if (response < 0)
-            return -1;
-        pbuffer += response;
-        bufsize -= response;
+        int response = send(sockfd, temp, minimum(buffsize), 0);
+        if (response < 0) return -1;
+
+        // increment the temp string to the position of the next character to be sent
+        temp += response;
+        buffsize -= response;
     }
     return 0;
 }
 
+// Function to receive data in chunks of less than 50 size
 char *receive_string(int sockfd)
 {
     char buff[BUFFSIZE];
     char *received_string;
     int response;
 
+    // Initial allocation
     received_string = (char *)malloc(sizeof(char) * BUFFSIZE);
     int stored = 0;
     int allocated = BUFFSIZE;
 
+    // while '\0' is not received iteratively receive and concatenate the buffer to received_string
     while (1)
     {
         response = recv(sockfd, buff, BUFFSIZE, 0);
@@ -54,6 +59,7 @@ char *receive_string(int sockfd)
             exit(0);
         }
 
+        // If the allocated size is not enough to concatenate the buffer, increase it and reallocate
         int changed = 0;
         while(stored + response > allocated){
             allocated += BUFFSIZE;
@@ -64,6 +70,7 @@ char *receive_string(int sockfd)
             received_string = realloc(received_string, allocated);
         }
     
+        // concatenate the buffer to received_string
         strcat(received_string, buff);
         stored += response;
 
@@ -76,11 +83,14 @@ char *receive_string(int sockfd)
     return received_string;
 }
 
+// This function removes the first burst of spaces and replace it with a single space
+// example: dir        Question_2 -> dir Question_2
 char *removeSpaces(char *str)
 {
     int len = 0;
     int space_encountered = 0;
 
+    // If str[i] is the first space encountered, ignore the whole burst of whitespaces
     for (int i = 0; str[i] != '\0'; i++)
     {
         if(!space_encountered){
@@ -99,6 +109,7 @@ char *removeSpaces(char *str)
 
     }
 
+    // Removing trailing whitespaces
     if(str[len-1] == ' ' || str[len-1] == '\t'){
         str[len-1] = '\0';
     }
@@ -106,7 +117,8 @@ char *removeSpaces(char *str)
     return str;
 }
 
-int find_word(char *word)
+// Function to find a word in a given file
+int find_word(char *word, char *users_file)
 {
     char line[1024];
 
@@ -125,38 +137,50 @@ int find_word(char *word)
     return 0;
 }
 
+// Function to change into the directory name given by s
 int change_dir(char *s)
 {
+    // If the chdir function gives and error, send -1 to the caller
     if (chdir(s) != 0)
     {
         return -1;
     }
 
+    // If no error, send 0
     return 0;
 }
 
+// Handling the dir command
 void list_dir(int sockfd, char *arg){
     DIR *dir;
     struct dirent *entry;
 
+    // Opening the directory specified by the arguments
     dir = opendir(arg);
 
+    // If directory could not be opened, send running error to client
     if(dir == NULL){
         send_data(sockfd, "####", 5);
     }
     else{
+        // Take a result pointer and allocate it an initial size of 50
         char *result;
         result = (char*)malloc(sizeof(char)*BUFFSIZE);
         int stored = 0;
         int allocated = BUFFSIZE;
 
+        // Keep reading from the directory until there is none left
         entry = readdir(dir);
         while(entry != NULL){
+            // Get the name of the entry
             char *name = entry->d_name;
+            // Since the dir command omits .(current directory) and ..(previous directory), I have also omitted them
             if(!strcmp(name, ".") || !strcmp(name, "..")) {
                 entry = readdir(dir);
                 continue;
             }
+            
+            // Similar to the receive_string function, reallocate memory to the result string whenever necessary
             int entry_length = strlen(name);
 
             int changed = 0;
@@ -169,6 +193,7 @@ void list_dir(int sockfd, char *arg){
                 result = realloc(result, allocated);
             }
 
+            // Concatenate the entry name to result and add two spaces(linux does this in case of any files starting with ')
             strcat(result, name);
             stored += entry_length;
 
@@ -178,6 +203,7 @@ void list_dir(int sockfd, char *arg){
             entry = readdir(dir);
         }
 
+        // send result to the client
         int response = send_data(sockfd, result, strlen(result)+1);
     }
 }
@@ -199,7 +225,7 @@ int main()
     }
     printf("Created socket\n");
 
-    // bind
+    // bind to local address
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(PORT);
     servaddr.sin_addr.s_addr = INADDR_ANY;
@@ -226,9 +252,13 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        // The child process takes care of running the commands, while the parent gets blocked at the accept call
         if (fork() == 0)
         {
+            // close sockfd since the child process does not need it
             close(sockfd);
+
+            // Send LOGIN to client
             strcpy(buff, "LOGIN:");
 
             response = send_data(newsockfd, buff, strlen(buff) + 1);
@@ -238,10 +268,13 @@ int main()
                 exit(EXIT_FAILURE);
             }
 
+            // Receive the username and search for it in the file
             char *username = receive_string(newsockfd);
             printf("searching for %s...\n", username);
 
-            if (find_word(username))
+            char *users_file = "users.txt";
+
+            if (find_word(username, users_file))
             {
                 strcpy(buff, "FOUND");
             }
@@ -250,6 +283,7 @@ int main()
                 strcpy(buff, "NOT-FOUND");
             }
 
+            // send search result to client
             response = send_data(newsockfd, buff, strlen(buff) + 1);
             if (response < 0)
             {
@@ -261,14 +295,20 @@ int main()
                 exit(0);
             }
 
+            // Keep receiving commands from the client until an exit is received
             while (1)
             {
+                // Receive the command
                 char *cmd = receive_string(newsockfd);
                 cmd = removeSpaces(cmd);
 
-                if(strlen(cmd) < 2){
-                    response = send_data(newsockfd, "####", 5);
+                int len = strlen(cmd);
+
+                // None of the valid commands are 1 or 0 length, so send invalid function
+                if(len < 2){
+                    response = send_data(newsockfd, "$$$$", 5);
                 }
+                // For pwd handling
                 else if (!strcmp(cmd, "pwd"))
                 {
                     char result[PATH_MAX];
@@ -282,18 +322,22 @@ int main()
                         response = send_data(newsockfd, "####", 5);
                     }
                 }
-                else if (strlen(cmd) >= 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r')
+                // For dir handling
+                else if ((len == 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r') || (len >= 3 && cmd[0] == 'd' && cmd[1] == 'i' && cmd[2] == 'r' && cmd[3] == ' '))
                 {
+                    // If the command is simply dir, open the current directory
                     if(strlen(cmd) == 3){
                         list_dir(newsockfd, ".");
                     }
+                    // Else send the argunent
                     else{
                         list_dir(newsockfd, cmd+4);
                     }
                 }
-                else if (strlen(cmd) >= 2 && cmd[0] == 'c' && cmd[1] == 'd')
+                // For cd handling
+                else if (len >= 2 && cmd[0] == 'c' && cmd[1] == 'd')
                 {
-
+                    // If the command is cd, change to home
                     if (strlen(cmd) == 2)
                     {
                         if (chdir("/home") != 0)
@@ -322,6 +366,7 @@ int main()
                         response = send_data(newsockfd, "$$$$", 5);
                     }
                 }
+                // Exit handling
                 else if (!strcmp(cmd, "exit"))
                 {
                     printf("%s logging out\n\n", username);

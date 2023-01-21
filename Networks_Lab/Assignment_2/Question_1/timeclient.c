@@ -38,6 +38,7 @@ int main()
     sendto(sockfd, (const char *)message, strlen(message), 0, (struct sockaddr *)&servaddr, len);
     printf("Message sent: %s\n", message);
 
+    // Set a timeout of 3s and iterate 5 times
     for (int i = 0; i < 5; i++)
     {
         struct pollfd setfd;
@@ -64,6 +65,7 @@ int main()
         }
     }
 
+    // If theres no timeout, the response would be > 0
     if(response == 0){
         printf("Timeout exceeded\n");
     }

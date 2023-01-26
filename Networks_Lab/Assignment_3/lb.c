@@ -19,8 +19,6 @@ int minimum(int x)
 // function to send data in chunks of 50 or less than 50
 int send_data(int sockfd, char *buffer, int buffsize)
 {
-    printf("sending %s\n", buffer);
-
     const char *temp = (const char *)buffer;
 
     // while buffer still has data, send 50 or buffsize(minimum of) number of bytes
@@ -39,6 +37,8 @@ int send_data(int sockfd, char *buffer, int buffsize)
 // Function to receive data in chunks of less than 50 size
 char *receive_string(int sockfd)
 {
+    printf("Entered receive string fn\n");
+
     char buff[BUFFMAX];
     char *received_string;
     int response;
@@ -52,6 +52,7 @@ char *receive_string(int sockfd)
     while (1)
     {
         response = recv(sockfd, buff, BUFFMAX, 0);
+        printf("%s\n", buff);
 
         if (response < 0)
         {
@@ -222,6 +223,7 @@ int main(int argc, char *argv[]){
                 }
                 
                 close(servsockfd);
+                exit(0);
             }
 
             poll_end = time(NULL);

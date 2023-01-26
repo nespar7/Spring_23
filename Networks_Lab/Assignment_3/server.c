@@ -82,16 +82,21 @@ char *receive_string(int sockfd)
     return received_string;
 }
 
+// argv[1] = server port
 int main(int argc, char *argv[]){
     int sockfd, newsockfd;
     int clilen;
     int response;
     struct sockaddr_in servaddr, cliaddr;
     int port_no = atoi(argv[1]);
+
+    // Seeding the random function with port number so that 
+    // two servers don't give the same load everytime
     srand((unsigned) port_no);
 
     char buff[BUFFMAX];
 
+    // Creating a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
         perror("Cannot create socket");
@@ -99,6 +104,7 @@ int main(int argc, char *argv[]){
     }
     printf("Created socket\n");
 
+    // Binding
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port_no);
     servaddr.sin_addr.s_addr = INADDR_ANY;
@@ -116,7 +122,6 @@ int main(int argc, char *argv[]){
     }
     printf("Listening at port %s...\n\n", argv[1]);
 
-
     // Iterating
     while(1){
         int newsockfd;
@@ -128,9 +133,12 @@ int main(int argc, char *argv[]){
             exit(0);
         }
 
+        // Receive message from the load balancer
         char *received = receive_string(newsockfd);
 
+        // Send the load or time depending on the request
         if(!strcmp(received, "Send Load")){
+            // Generate a random number, store it in a string and send it
             int num = rand() % 100 + 1;
             sprintf(received, "%d", num);
             response = send_data(newsockfd, received, strlen(received)+1);
@@ -141,6 +149,7 @@ int main(int argc, char *argv[]){
             printf("Load sent: %d\n\n", num);
         }
         else if(!strcmp(received, "Send Time")){
+            // Get the time and send to the load balancer
             time_t t;
             t = time(NULL);
             char *message = ctime(&t);
@@ -155,10 +164,10 @@ int main(int argc, char *argv[]){
         else{
             response = send_data(newsockfd, "Invalid request", 16);
         }
-
+        // close newsockfd
         close(newsockfd);
     }
-
+    // close sockfd
     close(sockfd);
     return 0;
 }

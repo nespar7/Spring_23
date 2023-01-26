@@ -55,11 +55,13 @@ char *receive_string(int sockfd){
     return received_string;
 }
 
+// argv[1] - load balancer port
 int main(int argc, char *argv[]){
     int sockfd;
     int response;
     struct sockaddr_in lbaddr;
 
+    // Creating a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
         perror("Cannot create socket");
@@ -67,6 +69,7 @@ int main(int argc, char *argv[]){
     }
     printf("Socket created\n");
 
+    // Conenct ot the load balancer
     lbaddr.sin_family = AF_INET;
     lbaddr.sin_port = htons(atoi(argv[1]));
     lbaddr.sin_addr.s_addr = INADDR_ANY;
@@ -77,6 +80,7 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
+    // Receive the time from the load balancer
     char *time_data = receive_string(sockfd);
     printf("Server time: %s\n", time_data);
 

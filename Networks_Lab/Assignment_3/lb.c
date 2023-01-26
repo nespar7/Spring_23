@@ -82,6 +82,7 @@ char *receive_string(int sockfd)
     return received_string;
 }
 
+// argv[1] - load balancer port, argv[2] - server 1 port, argv[3] - server 2 port
 int main(int argc, char *argv[]){
     int lbsockfd, newsockfd;
     int response;
@@ -91,6 +92,7 @@ int main(int argc, char *argv[]){
     int timeout = 5000;
     time_t poll_start, poll_end;
 
+    // Create a socket
     lbsockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(lbsockfd < 0){
         perror("Cannot create socket");
@@ -110,6 +112,7 @@ int main(int argc, char *argv[]){
     server_2.sin_port = htons(atoi(argv[3]));
     server_2.sin_addr.s_addr = INADDR_ANY;
 
+    // Bind the load balancer socket since it acts like a server to the client
     response = bind(lbsockfd, (struct sockaddr*)&lbaddr, sizeof(lbaddr));
     if(response < 0){
         perror("Bind error");
@@ -132,20 +135,26 @@ int main(int argc, char *argv[]){
         setfd.fd = lbsockfd;
         setfd.events = POLLIN;
 
+        // poll_start keeps the time before starting the poll
         poll_start = time(NULL);
         response = poll(&setfd, 1, timeout);
 
+        // If poll returns -1, error
         if(response < 0){
             perror("Poll error");
             exit(0);
         }
+        // If poll returns zero, timeout
         else if(response == 0){
+            // Set the timeout to 5 seconds again
             timeout = 5000;
 
+            // creating sockets for server 1 and 2
             int loadsockfd_1, loadsockfd_2;
             loadsockfd_1 = socket(AF_INET, SOCK_STREAM, 0);
             loadsockfd_2 = socket(AF_INET, SOCK_STREAM, 0);
 
+            // Connect to server 1, send the "Send Load" message and store the load in server_load_1
             response = connect(loadsockfd_1, (struct sockaddr*)&server_1, sizeof(server_1));
             if(response < 0){
                 perror("Cannot connect to server 1");
@@ -160,6 +169,7 @@ int main(int argc, char *argv[]){
             server_load_1 = atoi(receive_string(loadsockfd_1));
             printf("Server load at port %s: %d\n", argv[2], server_load_1);
 
+            // Connect to server 2, send the "Send Load" message and store the load in server_load_2
             response = connect(loadsockfd_2, (struct sockaddr*)&server_2, sizeof(server_2));
             if(response < 0){
                 perror("Cannot connect to server 2");
@@ -173,10 +183,12 @@ int main(int argc, char *argv[]){
             server_load_2 = atoi(receive_string(loadsockfd_2));
             printf("Server load at port %s: %d\n", argv[3], server_load_2);
 
+            // Closing the sockets
             close(loadsockfd_1);
             close(loadsockfd_2);
         }
         else{
+            // Accept the client connection
             int clilen = sizeof(client);
             newsockfd = accept(lbsockfd, (struct sockaddr*)&client, &clilen);
             if(newsockfd < 0){
@@ -185,10 +197,12 @@ int main(int argc, char *argv[]){
             }
             printf("Connected to client\n");
 
+            // The child process gets the time and sends it to the server
             if(fork() == 0){
                 close(lbsockfd);
                 int servsockfd = socket(AF_INET, SOCK_STREAM, 0);
 
+                // If server 1 has less load connect to it, else connect to server 2
                 if(server_load_1 <= server_load_2){
                     response = connect(servsockfd, (struct sockaddr*)&server_1, sizeof(server_1));
                     if(response < 0){
@@ -206,25 +220,34 @@ int main(int argc, char *argv[]){
                     printf("Sending time request to %s\n", inet_ntoa(server_2.sin_addr));
                 }
 
+                // Send the "Send Time" request
                 response = send_data(servsockfd, time_request, strlen(time_request)+1);
                 if(response < 0){
                     perror("Cannot send time request to server 1\n");
                     exit(0);
                 }
 
+                // Receiving the time as a string
                 char *time_data = receive_string(servsockfd);
+                
+                // Close the socket
+                close(servsockfd);
 
+                // Sending the time to client
                 response = send_data(newsockfd, time_data, strlen(time_data)+1);
                 if(response < 0){
                     perror("Cannot send time data to client\n");
                 }
                 
-                close(servsockfd);
                 exit(0);
             }
 
+            // poll_end is the time that the poll() call waits (approximate since the subsequent calls take some time)
             poll_end = time(NULL);
+            // The timeout decreases by the time that poll waited
             timeout -= difftime(poll_end, poll_start)*1000;
+            // If for any reason the timeout is negative(might be due to 
+            // the subsequent calls taking a bit more time than timeout), set timeout to 0 
             if(timeout < 0){
                 timeout = 0;
             }

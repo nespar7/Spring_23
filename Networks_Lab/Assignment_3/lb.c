@@ -188,7 +188,7 @@ int main(int argc, char *argv[]){
                         perror("Cannot connect to server 1");
                         exit(0);
                     }
-                    printf("Sending time request to %d\n", htonl(server_1.sin_addr.s_addr));
+                    printf("Sending time request to %d\n", inet_ntoa(server_1.sin_addr));
                 }
                 else{
                     response = connect(servsockfd, (struct sockaddr*)&server_2, sizeof(server_2));
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]){
                         perror("Cannot connect to server 2");
                         exit(0);
                     }
-                    printf("Sending time request to %d\n", htonl(server_2.sin_addr.s_addr));
+                    printf("Sending time request to %d\n", inet_ntoa(server_2.sin_addr));
                 }
 
                 response = send_data(servsockfd, time_request, strlen(time_request)+1);

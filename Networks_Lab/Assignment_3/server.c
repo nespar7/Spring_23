@@ -49,6 +49,7 @@ char *receive_string(int sockfd)
     while (1)
     {
         response = recv(sockfd, buff, BUFFMAX, 0);
+        printf("%s\n", buff);
 
         if (response < 0)
         {
@@ -78,6 +79,7 @@ char *receive_string(int sockfd)
         }
     }
 
+    printf("ending function: %s\n", received_string);
     return received_string;
 }
 
@@ -142,5 +144,7 @@ int main(int argc, char *argv[]){
         else{
             response = send_data(newsockfd, "Invalid request", 16);
         }
+
+        close(newsockfd);
     }
 }

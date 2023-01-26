@@ -65,6 +65,7 @@ int main(int argc, char *argv[]){
         perror("Cannot create socket");
         exit(0);
     }
+    printf("Socket created\n");
 
     lbaddr.sin_family = AF_INET;
     lbaddr.sin_port = htons(atoi(argv[1]));

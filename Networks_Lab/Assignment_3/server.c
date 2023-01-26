@@ -10,6 +10,11 @@
 
 #define BUFFMAX 50
 
+int minimum(int x)
+{
+    return x < BUFFMAX ? x : BUFFMAX;
+}
+
 // function to send data in chunks of 50 or less than 50
 int send_data(int sockfd, char *buffer, int buffsize)
 {
@@ -114,7 +119,7 @@ int main(int argc, char *argv[]){
         int newsockfd;
         
         clilen = sizeof(cliaddr);
-        newsockfd = accept(sockfd, (struct sockaddr*)&cliaddr, &cliaddr);
+        newsockfd = accept(sockfd, (struct sockaddr*)&cliaddr, &clilen);
         if(newsockfd < 0){
             perror("Accept error");
             exit(0);
@@ -124,7 +129,7 @@ int main(int argc, char *argv[]){
 
         if(!strcmp(received, "Send Load")){
             int num = rand() % 100 + 1;
-            sprintf(received, "%f", num);
+            sprintf(received, "%d", num);
             response = send_data(newsockfd, received, strlen(received)+1);
         }
         else if(!strcmp(received, "Send Time")){

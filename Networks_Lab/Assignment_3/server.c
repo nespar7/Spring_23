@@ -141,7 +141,7 @@ int main(int argc, char *argv[]){
             char *message = ctime(&t);
     
             response = send_data(newsockfd, message, strlen(message)+1);
-            print("Sending time: %s\n\n", message);
+            printf("Sending time: %s\n\n", message);
         }   
         else{
             response = send_data(newsockfd, "Invalid request", 16);

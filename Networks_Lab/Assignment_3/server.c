@@ -132,6 +132,7 @@ int main(int argc, char *argv[]){
 
         if(!strcmp(received, "Send Load")){
             int num = rand() % 100 + 1;
+            sprintf(received, "%d", num);
             response = send_data(newsockfd, received, strlen(received)+1);
             printf("Sending load: %d\n\n", num);
         }

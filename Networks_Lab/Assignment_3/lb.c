@@ -158,7 +158,7 @@ int main(int argc, char *argv[]){
                 exit(0);
             }
             server_load_1 = atoi(receive_string(loadsockfd_1));
-            printf("Server 1 load: %d\n", server_load_1);
+            printf("Server load at port %s: %d\n", argv[1], server_load_1);
 
             response = connect(loadsockfd_2, (struct sockaddr*)&server_2, sizeof(server_2));
             if(response < 0){
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]){
                 exit(0);
             }
             server_load_2 = atoi(receive_string(loadsockfd_2));
-            printf("Server 2 load: %d\n", server_load_2);
+            printf("Server load at port %s: %d\n", server_load_2);
 
             close(loadsockfd_1);
             close(loadsockfd_2);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
             printf("Connected to client\n");
 
             if(fork() == 0){
-
+                close(lbsockfd);
                 int servsockfd = socket(AF_INET, SOCK_STREAM, 0);
 
                 if(server_load_1 <= server_load_2){
@@ -228,6 +228,8 @@ int main(int argc, char *argv[]){
             if(timeout < 0){
                 timeout = 0;
             }
+
+            close(newsockfd);
         }
     }
 

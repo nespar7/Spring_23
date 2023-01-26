@@ -37,8 +37,6 @@ int send_data(int sockfd, char *buffer, int buffsize)
 // Function to receive data in chunks of less than 50 size
 char *receive_string(int sockfd)
 {
-    printf("Entered receive string fn\n");
-
     char buff[BUFFMAX];
     char *received_string;
     int response;
@@ -52,7 +50,6 @@ char *receive_string(int sockfd)
     while (1)
     {
         response = recv(sockfd, buff, BUFFMAX, 0);
-        printf("%s\n", buff);
 
         if (response < 0)
         {

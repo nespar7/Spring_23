@@ -42,8 +42,11 @@ char *receive_string(int sockfd)
 
     // Initial allocation
     received_string = (char *)malloc(sizeof(char) * BUFFMAX);
+    memset(received_string, 0, BUFFMAX);
     int stored = 0;
     int allocated = BUFFMAX;
+
+    printf("%s\n", received_string);
 
     // while '\0' is not received iteratively receive and concatenate the buffer to received_string
     while (1)
@@ -88,6 +91,8 @@ int main(int argc, char *argv[]){
     int clilen;
     int response;
     struct sockaddr_in servaddr, cliaddr;
+    int port_no = atoi(argv[1]);
+    srand((unsigned) port_no);
 
     char buff[BUFFMAX];
 
@@ -96,10 +101,10 @@ int main(int argc, char *argv[]){
         perror("Cannot create socket");
         exit(0);
     }
-    printf("Socket created\n");
+    printf("Created socket\n");
 
     servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(atoi(argv[1]));
+    servaddr.sin_port = htons(port_no);
     servaddr.sin_addr.s_addr = INADDR_ANY;
 
     response = bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
@@ -126,6 +131,8 @@ int main(int argc, char *argv[]){
             perror("Accept error");
             exit(0);
         }
+
+        printf("%d\n", ntohs(cliaddr.sin_port));
 
         char *received = receive_string(newsockfd);
 

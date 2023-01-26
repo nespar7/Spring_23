@@ -19,6 +19,8 @@ int minimum(int x)
 // function to send data in chunks of 50 or less than 50
 int send_data(int sockfd, char *buffer, int buffsize)
 {
+    printf("sending %s\n", buffer);
+
     const char *temp = (const char *)buffer;
 
     // while buffer still has data, send 50 or buffsize(minimum of) number of bytes
@@ -127,7 +129,6 @@ int main(int argc, char *argv[]){
 
     // Concurrent server
     while(1){
-
         struct pollfd setfd;
 
         setfd.fd = lbsockfd;
@@ -143,31 +144,39 @@ int main(int argc, char *argv[]){
         else if(response == 0){
             timeout = 5000;
 
-            response = connect(lbsockfd, (struct sockaddr*)&server_1, sizeof(server_1));
+            int loadsockfd_1, loadsockfd_2;
+            loadsockfd_1 = socket(AF_INET, SOCK_STREAM, 0);
+            loadsockfd_2 = socket(AF_INET, SOCK_STREAM, 0);
+
+            response = connect(loadsockfd_1, (struct sockaddr*)&server_1, sizeof(server_1));
             if(response < 0){
                 perror("Cannot connect to server 1");
                 exit(0);
             }
-            response = send_data(lbsockfd, load_request, strlen(load_request)+1);
+
+            response = send_data(loadsockfd_1, load_request, strlen(load_request)+1);
             if(response < 0){
                 perror("Cannot send data to server 1");
                 exit(0);
             }
-            server_load_1 = atoi(receive_string(lbsockfd));
+            server_load_1 = atoi(receive_string(loadsockfd_1));
             printf("Server 1 load: %d\n", server_load_1);
 
-            response = connect(lbsockfd, (struct sockaddr*)&server_2, sizeof(server_2));
+            response = connect(loadsockfd_2, (struct sockaddr*)&server_2, sizeof(server_2));
             if(response < 0){
                 perror("Cannot connect to server 2");
                 exit(0);
             }
-            response = send_data(lbsockfd, load_request, strlen(load_request)+1);
+            response = send_data(loadsockfd_2, load_request, strlen(load_request)+1);
             if(response < 0){
                 perror("Cannot send data to server 2");
                 exit(0);
             }
-            server_load_2 = atoi(receive_string(lbsockfd));
-            printf("Server 1 load: %d\n", server_load_2);
+            server_load_2 = atoi(receive_string(loadsockfd_2));
+            printf("Server 2 load: %d\n", server_load_2);
+
+            close(loadsockfd_1);
+            close(loadsockfd_2);
         }
         else{
             int clilen = sizeof(client);
@@ -182,13 +191,13 @@ int main(int argc, char *argv[]){
 
                 int servsockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-                if(server_load_1 < server_load_2){
+                if(server_load_1 <= server_load_2){
                     response = connect(servsockfd, (struct sockaddr*)&server_1, sizeof(server_1));
                     if(response < 0){
                         perror("Cannot connect to server 1");
                         exit(0);
                     }
-                    printf("Sending time request to %d\n", inet_ntoa(server_1.sin_addr));
+                    printf("Sending time request to %s\n", inet_ntoa(server_1.sin_addr));
                 }
                 else{
                     response = connect(servsockfd, (struct sockaddr*)&server_2, sizeof(server_2));
@@ -196,7 +205,7 @@ int main(int argc, char *argv[]){
                         perror("Cannot connect to server 2");
                         exit(0);
                     }
-                    printf("Sending time request to %d\n", inet_ntoa(server_2.sin_addr));
+                    printf("Sending time request to %s\n", inet_ntoa(server_2.sin_addr));
                 }
 
                 response = send_data(servsockfd, time_request, strlen(time_request)+1);
@@ -211,6 +220,8 @@ int main(int argc, char *argv[]){
                 if(response < 0){
                     perror("Cannot send time data to client\n");
                 }
+                
+                close(servsockfd);
             }
 
             poll_end = time(NULL);

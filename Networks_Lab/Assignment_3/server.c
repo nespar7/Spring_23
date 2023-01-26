@@ -134,7 +134,11 @@ int main(int argc, char *argv[]){
             int num = rand() % 100 + 1;
             sprintf(received, "%d", num);
             response = send_data(newsockfd, received, strlen(received)+1);
-            printf("Sending load: %d\n\n", num);
+            if(response < 0){
+                perror("Cannot send load");
+                exit(0);
+            }
+            printf("Load sent: %d\n\n", num);
         }
         else if(!strcmp(received, "Send Time")){
             time_t t;
@@ -142,7 +146,11 @@ int main(int argc, char *argv[]){
             char *message = ctime(&t);
     
             response = send_data(newsockfd, message, strlen(message)+1);
-            printf("Sending time: %s\n\n", message);
+            if(response < 0){
+                perror("Cannot send time");
+                exit(0);
+            }
+            printf("Time sent: %s\n\n", message);
         }   
         else{
             response = send_data(newsockfd, "Invalid request", 16);
@@ -150,4 +158,7 @@ int main(int argc, char *argv[]){
 
         close(newsockfd);
     }
+
+    close(sockfd);
+    return 0;
 }

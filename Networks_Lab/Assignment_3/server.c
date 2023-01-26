@@ -46,13 +46,10 @@ char *receive_string(int sockfd)
     int stored = 0;
     int allocated = BUFFMAX;
 
-    printf("%s\n", received_string);
-
     // while '\0' is not received iteratively receive and concatenate the buffer to received_string
     while (1)
     {
         response = recv(sockfd, buff, BUFFMAX, 0);
-        printf("%s\n", buff);
 
         if (response < 0)
         {
@@ -82,7 +79,6 @@ char *receive_string(int sockfd)
         }
     }
 
-    printf("ending function: %s\n", received_string);
     return received_string;
 }
 
@@ -118,7 +114,7 @@ int main(int argc, char *argv[]){
         perror("Listen error");
         exit(0);
     }
-    printf("Listening at port %s...\n", argv[1]);
+    printf("Listening at port %s...\n\n", argv[1]);
 
 
     // Iterating
@@ -132,14 +128,12 @@ int main(int argc, char *argv[]){
             exit(0);
         }
 
-        printf("%d\n", ntohs(cliaddr.sin_port));
-
         char *received = receive_string(newsockfd);
 
         if(!strcmp(received, "Send Load")){
             int num = rand() % 100 + 1;
-            sprintf(received, "%d", num);
             response = send_data(newsockfd, received, strlen(received)+1);
+            printf("Sending load: %d\n\n", num);
         }
         else if(!strcmp(received, "Send Time")){
             time_t t;
@@ -147,6 +141,7 @@ int main(int argc, char *argv[]){
             char *message = ctime(&t);
     
             response = send_data(newsockfd, message, strlen(message)+1);
+            print("Sending time: %s\n\n", message);
         }   
         else{
             response = send_data(newsockfd, "Invalid request", 16);

@@ -1,23 +1,23 @@
 -- Physician
 CREATE TABLE Physician (
     EmployeeID INTEGER PRIMARY KEY,
-    Name VARCHAR(100),
-    Position VARCHAR(100)
+    Name TEXT NOT NULLABLE,
+    Position TEXT NOT NULLABLE
 );
 
 -- Procedure
 CREATE TABLE Procedure (
     Code INTEGER PRIMARY KEY,
-    Name VARCHAR(100),
+    Name TEXT NOT NULLABLE,
     Cost INTEGER
 );
 
 -- Medication
 CREATE TABLE Medication (
     Code INTEGER PRIMARY KEY,
-    Name VARCHAR(100),
-    Brand VARCHAR(100),
-    Description VARCHAR(200)
+    Name TEXT NOT NULLABLE,
+    Brand TEXT NOT NULLABLE,
+    Description TEXT NOT NULLABLE
 );
 
 -- Block
@@ -30,8 +30,8 @@ CREATE TABLE Block (
 -- Nurse
 CREATE TABLE Nurse (
     EmployeeID INTEGER PRIMARY KEY,
-    Name VARCHAR(100),
-    Position VARCHAR(100),
+    Name TEXT NOT NULLABLE,
+    Position TEXT NOT NULLABLE,
     Registered BOOLEAN NOT NULL,
     SSN INTEGER
 );
@@ -145,7 +145,7 @@ CREATE TABLE Prescribes (
     Medication INTEGER NOT NULL,
     Date TIMESTAMP NOT NULL,
     Appointment INTEGER,
-    Dose text,
+    Dose text NOT NULL,
     PRIMARY KEY (Physician, Patient, Medication, Date),
     FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID),
     FOREIGN KEY (Patient) REFERENCES Patient(SSN),

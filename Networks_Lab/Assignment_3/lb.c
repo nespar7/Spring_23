@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <poll.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define BUFFMAX 50
 
@@ -89,8 +89,8 @@ int main(int argc, char *argv[]){
     struct sockaddr_in lbaddr, server_1, server_2, client;
     char *time_request = "Send Time";
     char *load_request = "Send Load";
-    int timeout = 5000;
-    time_t poll_start, poll_end;
+    double timeout = 5000;
+    struct timeval poll_start, poll_end;
 
     // Create a socket
     lbsockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
         perror("Listen error");
         exit(0);
     }
-    printf("Listening at port: %s...\n", argv[1]);
+    printf("Listening at port: %s...\n\n", argv[1]);
 
     int server_load_1 = 0, server_load_2 = 0;
 
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]){
         setfd.events = POLLIN;
 
         // poll_start keeps the time before starting the poll
-        poll_start = time(NULL);
+        gettimeofday(&poll_start, NULL);
         response = poll(&setfd, 1, timeout);
 
         // If poll returns -1, error
@@ -203,13 +203,14 @@ int main(int argc, char *argv[]){
                 int servsockfd = socket(AF_INET, SOCK_STREAM, 0);
 
                 // If server 1 has less load connect to it, else connect to server 2
+                int server;
                 if(server_load_1 <= server_load_2){
                     response = connect(servsockfd, (struct sockaddr*)&server_1, sizeof(server_1));
                     if(response < 0){
                         perror("Cannot connect to server 1");
                         exit(0);
                     }
-                    printf("Sending time request to %s\n", inet_ntoa(server_1.sin_addr));
+                    server = atoi(argv[2]);
                 }
                 else{
                     response = connect(servsockfd, (struct sockaddr*)&server_2, sizeof(server_2));
@@ -217,16 +218,17 @@ int main(int argc, char *argv[]){
                         perror("Cannot connect to server 2");
                         exit(0);
                     }
-                    printf("Sending time request to %s\n", inet_ntoa(server_2.sin_addr));
+                    server = atoi(argv[3]);
                 }
 
                 // Send the "Send Time" request
                 response = send_data(servsockfd, time_request, strlen(time_request)+1);
                 if(response < 0){
-                    perror("Cannot send time request to server 1\n");
+                    perror("Cannot send time request to server");
                     exit(0);
                 }
 
+                printf("Sending time request to server at port %d\n\n", server);
                 // Receiving the time as a string
                 char *time_data = receive_string(servsockfd);
                 
@@ -243,9 +245,9 @@ int main(int argc, char *argv[]){
             }
 
             // poll_end is the time that the poll() call waits (approximate since the subsequent calls take some time)
-            poll_end = time(NULL);
+            gettimeofday(&poll_end, NULL);
             // The timeout decreases by the time that poll waited
-            timeout -= difftime(poll_end, poll_start)*1000;
+            timeout -= ((poll_end.tv_sec - poll_start.tv_sec) + (poll_end.tv_usec - poll_start.tv_usec)/1000000.0)*1000;
             // If for any reason the timeout is negative(might be due to 
             // the subsequent calls taking a bit more time than timeout), set timeout to 0 
             if(timeout < 0){
@@ -254,6 +256,7 @@ int main(int argc, char *argv[]){
 
             close(newsockfd);
         }
+        printf("Timeout: %f\n\n", timeout);
     }
 
 }

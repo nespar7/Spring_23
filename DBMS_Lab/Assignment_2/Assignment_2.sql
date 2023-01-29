@@ -195,42 +195,107 @@ VALUES
 INSERT INTO
     Procedure (Code, Name, Cost)
 VALUES
-    (1, 'coronary artery bypass surgery', 450000),
+    (1, 'bypass surgery', 450000),
     (2, 'RTPCR test', 1400),
     (3, 'Appendectomy', 30000),
-    (4, 'gastric bypass surgery', 250000);
+    (4, 'colonoscopy', 250000),
+    (5, 'Immunotherapy', 300000);
 
 -- Department
--- DepartmentID     Name            Head
+-- DepartmentID     Name                Head
+-- 1                Cardiology          4
+-- 2                Gastroenterology    5
+-- 3                Oncology            3
+INSERT INTO
+    Department (DepartmentID, Name, Head)
+VALUES
+    (1, 'Cardiology', 4),
+    (2, 'Gastroenterology', 5),
+    (3, 'Oncology', 3);
 
 -- Affiliated_with
 -- Physician        Department      PrimaryAffiliation
+-- 1                1               true
+-- 2                2               true
+-- 3                3               true
+-- 4                1               true
+-- 5                2               true
+INSERT INTO
+    Affiliated_with (Physician, Department, PrimaryAffiliation)
+VALUES
+    (1, 1, true),
+    (2, 2, true),
+    (3, 3, true),
+    (4, 1, true),
+    (5, 2, true);
 
 -- Trained In
--- Physician        Treatment           CertificationDate       CertificationExpiry
+-- Physician        Treatment           CertificationDate       CertificationExpires
+-- 1                1                   2020-01-03              2024-01-03
+-- 2                4                   2020-11-13              2024-11-13
+-- 3                5                   2020-10-07              2024-04-07
+-- 4                1                   2021-04-20              2025-04-20
+-- 5                3                   2021-01-17              2026-01-17
+INSERT INTO
+    Trained_In (
+        Physician,
+        Treatment,
+        CertificationDate,
+        CertificationExpires
+    )
+VALUES
+    (1, 1, '2020-01-03', '2024-01-03'),
+    (2, 4, '2020-11-13', '2024-11-13'),
+    (3, 5, '2020-10-07', '2024-04-07'),
+    (4, 1, '2021-04-20', '2025-04-20'),
+    (5, 1, '2021-01-17', '2026-01-17');
+
+-- Block
+-- Floor        Code
+-- 1            123
+-- 1            124
+-- 2            123
+-- 69           420
+-- 3            123
+INSERT INTO
+    Block
+VALUES
+    (1, 123),
+    (1, 124),
+    (2, 123),
+    (3, 123);
 
 
 /* Queries */
 -- Q1. Names of all physicians who are trained in procedure name "bypass surgery"
 SELECT
-    Name
+    Ph.Name
 FROM
-    Physician
+    Physician as Ph
+    JOIN Trained_In as Tr ON Tr.Physician = Ph.EmployeeID
+    JOIN Procedure as Pr ON Pr.code = Tr.Treatment
 WHERE
-    EmployeeID = (
-        SELECT
-            Physician
-        FROM
-            Trained_In
-        WHERE
-            Treatment = (
-                SELECT
-                    Code
-                FROM
-                    Procedure
-                WHERE
-                    Name = 'bypass surgery'
-            )
-    )
+    Pr.Name = 'bypass surgery';
 
 -- Q2
+SELECT
+    Ph.name
+FROM
+    Physician as Ph
+    JOIN Affiliated_with as Aw ON (Aw.Physician, Aw.Department) = (
+        ph.EmployeeID,
+        (
+            SELECT
+                DepartmentID
+            FROM
+                Department
+            WHERE
+                Name = 'Cardiology'
+        )
+    )
+    JOIN Trained_In as Tr ON Tr.Physician = Ph.EmployeeID
+    JOIN Procedure as Pr ON Pr.code = Tr.Treatment
+WHERE
+    Pr.name = 'bypass surgery';
+
+-- Q3

@@ -1,174 +1,160 @@
+/* Creating tables */
 -- Physician
-CREATE TABLE
-	Physician (
-		EmployeeID INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Position TEXT NOT NULL,
-		SSN INTEGER NOT NULL
-	);
+CREATE TABLE Physician (
+	EmployeeID INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Position TEXT NOT NULL,
+	SSN INTEGER NOT NULL
+);
 
 -- Procedure
-CREATE TABLE
-	Procedure (
-		Code INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Cost INTEGER NOT NULL
-	);
+CREATE TABLE Procedure (
+	Code INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Cost INTEGER NOT NULL
+);
 
 -- Medication
-CREATE TABLE
-	Medication (
-		Code INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Brand TEXT NOT NULL,
-		Description TEXT NOT NULL
-	);
+CREATE TABLE Medication (
+	Code INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Brand TEXT NOT NULL,
+	Description TEXT NOT NULL
+);
 
 -- Block
-CREATE TABLE
-	Block (
-		Floor INTEGER NOT NULL,
-		Code INTEGER NOT NULL,
-		PRIMARY KEY (Floor, Code)
-	);
+CREATE TABLE Block (
+	Floor INTEGER NOT NULL,
+	Code INTEGER NOT NULL,
+	PRIMARY KEY (Floor, Code)
+);
 
 -- Nurse
-CREATE TABLE
-	Nurse (
-		EmployeeID INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Position TEXT NOT NULL,
-		Registered BOOLEAN NOT NULL,
-		SSN INTEGER NOT NULL
-	);
+CREATE TABLE Nurse (
+	EmployeeID INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Position TEXT NOT NULL,
+	Registered BOOLEAN NOT NULL,
+	SSN INTEGER NOT NULL
+);
 
 -- Trained_In
-CREATE TABLE
-	Trained_In (
-		Physician INTEGER NOT NULL,
-		Treatment INTEGER NOT NULL,
-		CertificationDate TIMESTAMP NOT NULL,
-		CertificationExpires TIMESTAMP NOT NULL,
-		PRIMARY KEY (Physician, Treatment),
-		FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
-		FOREIGN KEY (Treatment) REFERENCES Procedure (Code)
-	);
+CREATE TABLE Trained_In (
+	Physician INTEGER NOT NULL,
+	Treatment INTEGER NOT NULL,
+	CertificationDate TIMESTAMP NOT NULL,
+	CertificationExpires TIMESTAMP NOT NULL,
+	PRIMARY KEY (Physician, Treatment),
+	FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
+	FOREIGN KEY (Treatment) REFERENCES Procedure (Code)
+);
 
 -- Department
-CREATE TABLE
-	Department (
-		DepartmentID INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Head INTEGER NOT NULL,
-		FOREIGN KEY (Head) REFERENCES Physician (EmployeeID)
-	);
+CREATE TABLE Department (
+	DepartmentID INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Head INTEGER NOT NULL,
+	FOREIGN KEY (Head) REFERENCES Physician (EmployeeID)
+);
 
 -- Affiliated_with
-CREATE TABLE
-	Affiliated_with (
-		Physician INTEGER NOT NULL,
-		Department INTEGER NOT NULL,
-		PrimaryAffiliation BOOLEAN NOT NULL,
-		FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
-		FOREIGN KEY (Department) REFERENCES Department (DepartmentID),
-		PRIMARY KEY (Physician, Department)
-	);
+CREATE TABLE Affiliated_with (
+	Physician INTEGER NOT NULL,
+	Department INTEGER NOT NULL,
+	PrimaryAffiliation BOOLEAN NOT NULL,
+	FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
+	FOREIGN KEY (Department) REFERENCES Department (DepartmentID),
+	PRIMARY KEY (Physician, Department)
+);
 
 -- Patient
-CREATE TABLE
-	Patient (
-		SSN INTEGER PRIMARY KEY,
-		Name TEXT NOT NULL,
-		Address TEXT NOT NULL,
-		Phone TEXT NOT NULL,
-		InsuranceID INTEGER NOT NULL,
-		PCP INTEGER NOT NULL,
-		FOREIGN KEY (PCP) REFERENCES Physician (EmployeeID)
-	);
+CREATE TABLE Patient (
+	SSN INTEGER PRIMARY KEY,
+	Name TEXT NOT NULL,
+	Address TEXT NOT NULL,
+	Phone TEXT NOT NULL,
+	InsuranceID INTEGER NOT NULL,
+	PCP INTEGER NOT NULL,
+	FOREIGN KEY (PCP) REFERENCES Physician (EmployeeID)
+);
 
 -- Room
-CREATE TABLE
-	Room (
-		Number INTEGER PRIMARY KEY,
-		Type TEXT NOT NULL,
-		BlockFloor INTEGER NOT NULL,
-		BlockCode INTEGER NOT NULL,
-		Unavailable BOOLEAN NOT NULL,
-		FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block (Floor, Code)
-	);
+CREATE TABLE Room (
+	Number INTEGER PRIMARY KEY,
+	Type TEXT NOT NULL,
+	BlockFloor INTEGER NOT NULL,
+	BlockCode INTEGER NOT NULL,
+	Unavailable BOOLEAN NOT NULL,
+	FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block (Floor, Code)
+);
 
 -- On_Call, here "End" is used called End is a keyword in postgresql
-CREATE TABLE
-	On_Call (
-		Nurse INTEGER NOT NULL,
-		BlockFloor INTEGER NOT NULL,
-		BlockCode INTEGER NOT NULL,
-		Start TIMESTAMP NOT NULL,
-		"End" TIMESTAMP NOT NULL,
-		FOREIGN KEY (Nurse) REFERENCES Nurse (EmployeeID),
-		FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block (Floor, Code),
-		PRIMARY KEY (Nurse, BlockFloor, BlockCode, Start, "End")
-	);
+CREATE TABLE On_Call (
+	Nurse INTEGER NOT NULL,
+	BlockFloor INTEGER NOT NULL,
+	BlockCode INTEGER NOT NULL,
+	Start TIMESTAMP NOT NULL,
+	"End" TIMESTAMP NOT NULL,
+	FOREIGN KEY (Nurse) REFERENCES Nurse (EmployeeID),
+	FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block (Floor, Code),
+	PRIMARY KEY (Nurse, BlockFloor, BlockCode, Start, "End")
+);
 
 -- Stay
-CREATE TABLE
-	Stay (
-		StayID INTEGER PRIMARY KEY,
-		Patient INTEGER NOT NULL,
-		Room INTEGER NOT NULL,
-		Start TIMESTAMP NOT NULL,
-		"End" TIMESTAMP NOT NULL,
-		FOREIGN KEY (Room) REFERENCES Room (Number),
-		FOREIGN KEY (Patient) REFERENCES Patient (SSN)
-	);
+CREATE TABLE Stay (
+	StayID INTEGER PRIMARY KEY,
+	Patient INTEGER NOT NULL,
+	Room INTEGER NOT NULL,
+	Start TIMESTAMP NOT NULL,
+	"End" TIMESTAMP NOT NULL,
+	FOREIGN KEY (Room) REFERENCES Room (Number),
+	FOREIGN KEY (Patient) REFERENCES Patient (SSN)
+);
 
 -- Undergoes
-CREATE TABLE
-	Undergoes (
-		Patient INTEGER NOT NULL,
-		Procedure INTEGER NOT NULL,
-		Stay INTEGER NOT NULL,
-		Date TIMESTAMP NOT NULL,
-		Physician INTEGER NOT NULL,
-		AssistingNurse INTEGER,
-		PRIMARY KEY (Patient, Procedure, Stay, Date),
-		FOREIGN KEY (Patient) REFERENCES Patient (SSN),
-		FOREIGN KEY (Procedure) REFERENCES Procedure (Code),
-		FOREIGN KEY (Stay) REFERENCES Stay (StayID),
-		FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
-		FOREIGN KEY (AssistingNurse) REFERENCES Nurse (EmployeeID)
-	);
+CREATE TABLE Undergoes (
+	Patient INTEGER NOT NULL,
+	Procedure INTEGER NOT NULL,
+	Stay INTEGER NOT NULL,
+	Date TIMESTAMP NOT NULL,
+	Physician INTEGER NOT NULL,
+	AssistingNurse INTEGER,
+	PRIMARY KEY (Patient, Procedure, Stay, Date),
+	FOREIGN KEY (Patient) REFERENCES Patient (SSN),
+	FOREIGN KEY (Procedure) REFERENCES Procedure (Code),
+	FOREIGN KEY (Stay) REFERENCES Stay (StayID),
+	FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
+	FOREIGN KEY (AssistingNurse) REFERENCES Nurse (EmployeeID)
+);
 
 -- Appointment
-CREATE TABLE
-	Appointment (
-		AppointmentID INTEGER PRIMARY KEY,
-		Patient INTEGER NOT NULL,
-		prepNurse INTEGER,
-		Physician INTEGER NOT NULL,
-		Start TIMESTAMP NOT NULL,
-		"End" TIMESTAMP NOT NULL,
-		ExaminationRoom TEXT NOT NULL,
-		FOREIGN KEY (Patient) REFERENCES Patient (SSN),
-		FOREIGN KEY (prepNurse) REFERENCES Nurse (EmployeeID),
-		FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID)
-	);
+CREATE TABLE Appointment (
+	AppointmentID INTEGER PRIMARY KEY,
+	Patient INTEGER NOT NULL,
+	prepNurse INTEGER,
+	Physician INTEGER NOT NULL,
+	Start TIMESTAMP NOT NULL,
+	"End" TIMESTAMP NOT NULL,
+	ExaminationRoom TEXT NOT NULL,
+	FOREIGN KEY (Patient) REFERENCES Patient (SSN),
+	FOREIGN KEY (prepNurse) REFERENCES Nurse (EmployeeID),
+	FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID)
+);
 
 -- Prescribes
-CREATE TABLE
-	Prescribes (
-		Physician INTEGER NOT NULL,
-		Patient INTEGER NOT NULL,
-		Medication INTEGER NOT NULL,
-		Date TIMESTAMP NOT NULL,
-		Appointment INTEGER,
-		Dose TEXT NOT NULL,
-		PRIMARY KEY (Physician, Patient, Medication, Date),
-		FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
-		FOREIGN KEY (Patient) REFERENCES Patient (SSN),
-		FOREIGN KEY (Medication) REFERENCES Medication (Code),
-		FOREIGN KEY (Appointment) REFERENCES Appointment (AppointmentID)
-	);
+CREATE TABLE Prescribes (
+	Physician INTEGER NOT NULL,
+	Patient INTEGER NOT NULL,
+	Medication INTEGER NOT NULL,
+	Date TIMESTAMP NOT NULL,
+	Appointment INTEGER,
+	Dose TEXT NOT NULL,
+	PRIMARY KEY (Physician, Patient, Medication, Date),
+	FOREIGN KEY (Physician) REFERENCES Physician (EmployeeID),
+	FOREIGN KEY (Patient) REFERENCES Patient (SSN),
+	FOREIGN KEY (Medication) REFERENCES Medication (Code),
+	FOREIGN KEY (Appointment) REFERENCES Appointment (AppointmentID)
+);
 
 /* Data population */
 -- Physician Data
@@ -247,7 +233,7 @@ INSERT INTO
 	)
 VALUES
 	(1, 1, '2020-01-03', '2024-01-03'),
-	(2, 4, '2020-11-13', '2024-11-13'),
+	(2, 4, '2020-11-13', '2023-01-13'),
 	(3, 5, '2020-10-07', '2024-04-07'),
 	(4, 1, '2021-04-20', '2025-04-20'),
 	(5, 1, '2021-01-17', '2026-01-17');
@@ -350,9 +336,24 @@ VALUES
 INSERT INTO
 	Medication (Code, Name, Brand, Description)
 VALUES
-	(1, 'remdesivir', 'Zydus Cadila', 'antiviral medicine that works against severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)'),
-	(2, 'prilosec', 'AstraZeneca', 'a prescription and over-the-counter medicine used to treat the symptoms of gastroesophageal reflux disease (GERD), gastric ulcers, and other conditions caused by excess stomach acid'),
-	(3, 'ibrutinib', 'Pharmacyclics LLC', 'a prescription medication used as an inhibitor of Bruton tyrosine kinase (BTK) used to treat patients with mantle cell lymphoma (MCL)');
+	(
+		1,
+		'remdesivir',
+		'Zydus Cadila',
+		'antiviral medicine that works against severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)'
+	),
+	(
+		2,
+		'prilosec',
+		'AstraZeneca',
+		'a prescription and over-the-counter medicine used to treat the symptoms of gastroesophageal reflux disease (GERD), gastric ulcers, and other conditions caused by excess stomach acid'
+	),
+	(
+		3,
+		'ibrutinib',
+		'Pharmacyclics LLC',
+		'a prescription medication used as an inhibitor of Bruton tyrosine kinase (BTK) used to treat patients with mantle cell lymphoma (MCL)'
+	);
 
 -- Appointment
 -- AppointmentID		Patient		PrepNurse		Physician		Start 					"End" 					ExaminationRoom
@@ -360,29 +361,109 @@ VALUES
 -- 2					10			NULL			2				2023-01-31 19:00:00		2023-01-31 19:30:00		'X-Ray Examination Room'
 -- 3					11			8				3				2023-02-06 09:00:00		2023-02-06 10:15:00		'Radiation Exam Room'
 INSERT INTO
-	Appointment (AppointmentID, Patient, PrepNurse, Physician, Start, "End", ExaminationRoom)
+	Appointment (
+		AppointmentID,
+		Patient,
+		PrepNurse,
+		Physician,
+		Start,
+		"End",
+		ExaminationRoom
+	)
 VALUES
-	(1, 9, 6, 1, '2023-01-29 16:30:00', '2023-01-29 17:30:00', 'Cardiovascular Exam Room'),
-	(2, 10, NULL, 2, '2023-01-31 19:00:00', '2023-01-31 19:30:00', 'X-Ray Examination Room'),
-	(3, 11, 8, 3, '2023-02-06 09:00:00', '2023-02-06 10:15:00', 'Radiation Exam Room');
+	(
+		1,
+		9,
+		6,
+		1,
+		'2023-01-29 16:30:00',
+		'2023-01-29 17:30:00',
+		'Cardiovascular Exam Room'
+	),
+	(
+		2,
+		10,
+		NULL,
+		2,
+		'2023-01-31 19:00:00',
+		'2023-01-31 19:30:00',
+		'X-Ray Examination Room'
+	),
+	(
+		3,
+		11,
+		8,
+		3,
+		'2023-02-06 09:00:00',
+		'2023-02-06 10:15:00',
+		'Radiation Exam Room'
+	),
+	(
+		4,
+		9,
+		6,
+		4,
+		'2023-02-15 10:00:00',
+		'2023-02-15 11:00:00',
+		'Cardiovascular Exam Room'
+	);
 
 -- Prescribes
 -- Physician	Patient		Medication		Date			Appointment		Dose
 -- 9			9			1				'2023-02-10'	NULL			'100 mg'
 -- 2			10			2				'2023-01-31'	2				'20 mg'
 -- 3			11			3				'2023-02-06'	3				'420 mg'
-
 INSERT INTO
-	Prescribes (Physician, Patient, Medication, Date, Appointment, Dose)
+	Prescribes (
+		Physician,
+		Patient,
+		Medication,
+		Date,
+		Appointment,
+		Dose
+	)
 VALUES
-	(9, 9, 1, '2023-02-10', NULL, '100 mg'),
-	(2, 10, 2, '2023-01-31', 2, '20 mg'),
-	(3, 11, 3, '2023-02-06', 3, '420 mg');
+	(9, 9, 1, '2023-02-10', 1, '100 mg'),
+	(2, 10, 2, '2023-01-31', NULL, '20 mg'),
+	(3, 11, 3, '2023-02-06', 3, '420 mg'),
+	(9, 10, 1, '2023-02-11', NULL, '100 mg');
 
 -- Stay
 -- StayID		Patient		Room		Start					"End"
 -- 1			10			124			'2023-01-31'			'2023-02-04'
--- 2			11			121			'2023-02-06 14:30:00'	'2023-02-06 17:30:00'
+-- 2			11			121			'2023-02-06 14:30:00'	'2023-02-22 17:30:00'
+-- 3			9			124			'2023-02-10'			'2023-02-13'
+INSERT INTO
+	Stay (StayID, Patient, Room, Start, "End")
+VALUES
+	(1, 10, 124, '2023-01-31', '2023-02-04'),
+	(
+		2,
+		11,
+		121,
+		'2023-02-06 14:30:00',
+		'2023-02-22 17:30:00'
+	),
+	(3, 9, 124, '2023-02-10', '2023-02-13');
+
+-- Undergoes
+-- Patient 		Procedure		Stay		Date			Physician		AssistingNurse
+-- 9			1				3			'2023-02-11'	1				6
+-- 10			4				1			'2023-02-02'	2				NULL
+-- 11			5				2			'2023-02-06'	3				8
+INSERT INTO
+	Undergoes (
+		Patient,
+		Procedure,
+		Stay,
+		Date,
+		Physician,
+		AssistingNurse
+	)
+VALUES
+	(9, 1, 3, '2023-02-11', 1, 6),
+	(10, 4, 1, '2023-02-02', 2, NULL),
+	(11, 3, 2, '2023-02-06', 3, 8);
 
 /* Queries */
 -- Q1. Names of all physicians who are trained in procedure name "bypass surgery"
@@ -428,7 +509,8 @@ WHERE
 
 -- Q4
 SELECT
-	PT.Name, PT.Address
+	PT.Name,
+	PT.Address
 FROM
 	Patient as PT
 	JOIN Medication as MC ON MC.Name = 'remdesivir'
@@ -438,7 +520,137 @@ WHERE
 
 -- Q5
 SELECT
-	PT.Name, PT.InsuranceID
+	PT.Name,
+	PT.InsuranceID
 FROM
 	Patient as PT
-	JOIN 
+	JOIN Room as R ON R.Type = 'ICU'
+	JOIN Stay as S ON S.Patient = PT.SSN
+WHERE
+	S."End" - S.Start >= interval '15 days';
+
+-- Q6
+SELECT
+	N.Name as Nurse_name
+FROM
+	Nurse as N
+	JOIN Procedure as Pr ON Pr.Name = 'bypass surgery'
+	JOIN Undergoes as U ON U.Procedure = Pr.Code
+WHERE
+	U.AssistingNurse = N.EmployeeID;
+
+-- Q7
+SELECT
+	N.Name as Assisting_Nurse,
+	N.Position as Nurse_position,
+	(
+		SELECT
+			Name
+		FROM
+			Patient as PT
+		WHERE
+			U.Patient = PT.SSN
+	) as Patient_name,
+	(
+		SELECT
+			Name
+		FROM
+			Physician as Ph
+		WHERE
+			U.Physician = Ph.EmployeeID
+	) as Physician_name
+FROM
+	Nurse as N
+	JOIN Procedure as Pr ON Pr.Name = 'bypass surgery'
+	JOIN Undergoes as U ON U.Procedure = Pr.Code
+WHERE
+	N.EmployeeID = U.AssistingNurse;
+
+-- Q8
+SELECT
+	Ph.Name
+FROM
+	Physician as Ph
+	JOIN Trained_In as TI ON TI.Physician = Ph.EmployeeID
+	JOIN Undergoes as U ON U.Physician = Ph.EmployeeID
+WHERE
+	TI.Treatment != U.Procedure;
+
+-- Q9
+SELECT
+	Ph.Name
+FROM
+	Physician as Ph
+	JOIN Trained_In as Tr ON Tr.Physician = Ph.EmployeeID
+	JOIN Undergoes as U on U.Physician = Ph.EmployeeID
+WHERE
+	Tr.Treatment = U.Procedure
+	and U.Date > Tr.CertificationExpires;
+
+-- Q10
+SELECT
+	Ph.Name as Physician,
+	(
+		SELECT
+			Name
+		FROM
+			Procedure as Pr
+		WHERE
+			Pr.Code = U.Procedure
+	) as Procedure,
+	U.Date,
+	(
+		SELECT
+			Name
+		FROM
+			Patient as Pt
+		WHERE	
+			Pt.SSN = U.Patient
+	) as Patient
+FROM
+	Physician as Ph
+	JOIN Trained_In as Tr ON Tr.Physician = Ph.EmployeeID
+	JOIN Undergoes as U on U.Physician = Ph.EmployeeID
+WHERE
+	Tr.Treatment = U.Procedure
+	and U.Date > Tr.CertificationExpires;
+
+-- Q11
+SELECT
+	Pt.Name as Patient
+FROM
+	SELECT
+		Pt.Name, Pt.SSN
+	FROM
+	Patient as Pt
+	JOIN Prescribes as Pc ON Pc.Patient = Pt.SSN
+	JOIN Undergoes as U ON U.Patient = Pt.SSN
+	JOIN Appointment as Ap ON Ap.Patient = Pt.SSN
+	JOIN Physician as Ph ON Ap.Physician = Ph.EmployeeID
+	JOIN Affiliated_with as Aw ON Aw.Physician = Ph.EmployeeID
+	JOIN Department as Dp ON Dp.DepartmentID = Aw.Department and Dp.Name = 'Cardiology'
+WHERE
+	Pc.Physician = Pt.PCP
+	and
+	(
+		SELECT
+			Cost
+		FROM 
+			Procedure
+		WHERE
+			U.Procedure = Procedure.Code
+	) > 5000
+	and
+	(
+		Ph.Position != 'Head of Department'
+	)
+
+-- Q12
+SELECT
+	MC.Name as Medicine, MC.Brand, COUNT(*) as number_of_times
+FROM
+	Medication as MC
+	JOIN Prescribes as Pc ON Pc.medication = MC.code
+GROUP BY MC.Name, MC.Brand
+ORDER BY count DESC
+LIMIT 1;

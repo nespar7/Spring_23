@@ -171,314 +171,154 @@ CREATE TABLE
 		FOREIGN KEY (Appointment) REFERENCES Appointment (AppointmentID)
 	);
 
-/* Data population */
--- Physician Data
--- ID       Name        Position                SSN
--- 1        Valerie     Medical Director        1
--- 2        Janet       Senior Resident         2
--- 3        Thomas      Head of Department      3
--- 4        Joseph      Head of Department      4
--- 5        George      Head of Department      5 
-INSERT INTO
-	Physician (EmployeeID, Name, Position, SSN)
-VALUES
-	(1, 'Valerie', 'Medical Director', 1),
-	(2, 'Janet', 'Senior Resident', 2),
-	(3, 'Thomas', 'Head of Department', 3),
-	(4, 'Joseph', 'Head of Department', 4),
-	(5, 'George', 'Head of Department', 5),
-	(9, 'Sera', 'General Physician', 12);
+/* Populating data */
+INSERT INTO Physician VALUES(1,'Alan Donald','Intern',111111111);
+INSERT INTO Physician VALUES(2,'Bruce Reid','Attending Physician',222222222);
+INSERT INTO Physician VALUES(3,'Courtney Walsh','Surgeon Physician',333333333);
+INSERT INTO Physician VALUES(4,'Malcom Marshall','Senior Physician',444444444);
+INSERT INTO Physician VALUES(5,'Dennis Lillee','Head Chief of Medicine',555555555);
+INSERT INTO Physician VALUES(6,'Jeff Thomson','Surgeon Physician',666666666);
+INSERT INTO Physician VALUES(7,'Richard Hadlee','Surgeon Physician',777777777);
+INSERT INTO Physician VALUES(8,'Kapil  Dev','Resident',888888888);
+INSERT INTO Physician VALUES(9,'Ishant Sharma','Psychiatrist',999999999);
 
--- Procedure Data
--- Code         Name                    Cost
--- 1            bypass surgery          450000
--- 2            RTPCR test              1400
--- 3            Appendectomy            30000
-INSERT INTO
-	Procedure (Code, Name, Cost)
-VALUES
-	(1, 'bypass surgery', 450000),
-	(2, 'RTPCR test', 1400),
-	(3, 'Appendectomy', 30000),
-	(4, 'colonoscopy', 250000),
-	(5, 'Immunotherapy', 300000);
+INSERT INTO Department VALUES(1,'medicine',4);
+INSERT INTO Department VALUES(2,'surgery',7);
+INSERT INTO Department VALUES(3,'psychiatry',9);
+INSERT INTO Department VALUES(4,'cardiology',8);
 
--- Department
--- DepartmentID     Name                Head
--- 1                Cardiology          4
--- 2                Gastroenterology    5
--- 3                Oncology            3
-INSERT INTO
-	Department (DepartmentID, Name, Head)
-VALUES
-	(1, 'Cardiology', 4),
-	(2, 'Gastroenterology', 5),
-	(3, 'Oncology', 3);
+INSERT INTO Affiliated_With VALUES(1,1,true);
+INSERT INTO Affiliated_With VALUES(2,1,true);
+INSERT INTO Affiliated_With VALUES(3,1,false);
+INSERT INTO Affiliated_With VALUES(3,2,true);
+INSERT INTO Affiliated_With VALUES(4,1,true);
+INSERT INTO Affiliated_With VALUES(5,1,true);
+INSERT INTO Affiliated_With VALUES(6,2,true);
+INSERT INTO Affiliated_With VALUES(7,1,false);
+INSERT INTO Affiliated_With VALUES(7,2,true);
+INSERT INTO Affiliated_With VALUES(8,1,true);
+INSERT INTO Affiliated_With VALUES(9,3,true);
 
--- Affiliated_with
--- Physician        Department      PrimaryAffiliation
--- 1                1               true
--- 2                2               true
--- 3                3               true
--- 4                1               true
--- 5                2               true
-INSERT INTO
-	Affiliated_with (Physician, Department, PrimaryAffiliation)
-VALUES
-	(1, 1, true),
-	(2, 2, true),
-	(3, 3, true),
-	(4, 1, true),
-	(5, 2, true),
-	(9, 2, true);
+INSERT INTO Procedure VALUES(1,'bypass surgery',1500.0);
+INSERT INTO Procedure VALUES(2,'angioplasty',3750.0);
+INSERT INTO Procedure VALUES(3,'arthoscopy',4500.0);
+INSERT INTO Procedure VALUES(4,'carotid endarterectomy',10000.0);
+INSERT INTO Procedure VALUES(5,'cholecystectomy',4899.0);
+INSERT INTO Procedure VALUES(6,'tonsillectomy',5600.0);
+INSERT INTO Procedure VALUES(7,'cataract surgery',25.0);
 
--- Trained In
--- Physician        Treatment           CertificationDate       CertificationExpires
--- 1                1                   2020-01-03              2024-01-03
--- 2                4                   2020-11-13              2024-11-13
--- 3                5                   2020-10-07              2024-04-07
--- 4                1                   2021-04-20              2025-04-20
--- 5                3                   2021-01-17              2026-01-17
-INSERT INTO
-	Trained_In (
-		Physician,
-		Treatment,
-		CertificationDate,
-		CertificationExpires
-	)
-VALUES
-	(1, 1, '2020-01-03', '2024-01-03'),
-	(2, 4, '2020-11-13', '2023-01-13'),
-	(3, 5, '2020-10-07', '2024-04-07'),
-	(4, 1, '2021-04-20', '2025-04-20'),
-	(5, 1, '2021-01-17', '2026-01-17');
+INSERT INTO Patient VALUES(100000001,'Dilip Vengsarkar','42 Foobar Lane','555-0256',68476213,1);
+INSERT INTO Patient VALUES(100000002,'Richie Richardson','37 Infinite Loop','555-0512',36546321,2);
+INSERT INTO Patient VALUES(100000003,'Mark Waugh','101 Parkway Street','555-1204',65465421,2);
+INSERT INTO Patient VALUES(100000004,'Ramiz Raza','1100 Sparks Avenue','555-2048',68421879,3);
 
--- Block
--- Floor        Code
--- 1            123
--- 1            124
--- 2            123
--- 69           420
--- 3            123
-INSERT INTO
-	Block (Floor, Code)
-VALUES
-	(1, 1),
-	(1, 2),
-	(2, 1),
-	(3, 1);
+INSERT INTO Nurse VALUES(101,'Eknath Solkar','Head Nurse',true,111111110);
+INSERT INTO Nurse VALUES(102,'David Boon','Nurse',true,222222220);
+INSERT INTO Nurse VALUES(103,'Andy Flowers','Nurse',false,333333330);
 
--- Nurse
--- EmployeeID       Name            Position                Registered      SSN
--- 6                Jaques          Registered Nurse        true            6        
--- 7                Xavier          Nurse Practitioner      false           7
--- 8                Stella          ICU Registered Nurse    true            8
-INSERT INTO
-	Nurse (EmployeeID, Name, Position, Registered, SSN)
-VALUES
-	(6, 'Jaques', 'Registered Nurse', true, 6),
-	(7, 'Xavier', 'Nurse Practitioner', false, 7),
-	(8, 'Stella', 'ICU Registered Nurse', true, 8);
+INSERT INTO Appointment VALUES(13216584,100000001,101,1,'2018-04-24 10:00','2018-04-24 11:00','A');
+INSERT INTO Appointment VALUES(26548913,100000002,101,2,'2018-04-24 10:00','2018-04-24 11:00','B');
+INSERT INTO Appointment VALUES(36549879,100000001,102,1,'2018-04-25 10:00','2018-04-25 11:00','A');
+INSERT INTO Appointment VALUES(46846589,100000004,103,4,'2018-04-25 10:00','2018-04-25 11:00','B');
+INSERT INTO Appointment VALUES(59871321,100000004,NULL,4,'2018-04-26 10:00','2018-04-26 11:00','C');
+INSERT INTO Appointment VALUES(69879231,100000003,103,2,'2018-04-26 11:00','2018-04-26 12:00','C');
+INSERT INTO Appointment VALUES(76983231,100000001,NULL,3,'2018-04-26 12:00','2018-04-26 13:00','C');
+INSERT INTO Appointment VALUES(86213939,100000004,102,9,'2018-04-27 10:00','2018-04-21 11:00','A');
+INSERT INTO Appointment VALUES(93216548,100000002,101,2,'2018-04-27 10:00','2018-04-27 11:00','B');
 
--- Room
--- Number           Type            	BlockFloor              BlockCode       Unavailable
--- 121              ICU             	1                       1               false
--- 122				Operation Theatre	1						2				false
--- 123				Multibed Ward		2						1				false
--- 124				Single Room			3						1				false
--- 125				Single Room			3						1				true
-INSERT INTO
-	Room (Number, Type, BlockFloor, BlockCode, Unavailable)
-VALUES
-	(121, 'ICU', 1, 1, false),
-	(122, 'Operation Theatre', 1, 2, false),
-	(123, 'Multibed Ward', 2, 1, false),
-	(124, 'Single Room', 2, 1, false),
-	(125, 'Single Room', 3, 1, true);
+INSERT INTO Medication VALUES(1,'Paracetamol','Z','N/A');
+INSERT INTO Medication VALUES(2,'Actemra','Foolki Labs','N/A');
+INSERT INTO Medication VALUES(3,'Molnupiravir','Bale Laboratories','N/A');
+INSERT INTO Medication VALUES(4,'Paxlovid','Bar Industries','N/A');
+INSERT INTO Medication VALUES(5,'Remdesivir','Donald Pharmaceuticals','N/A');
 
--- On_Call
--- Nurse	Floor	Code	Start		End
--- 6		2		1		2023-01-27	2023-01-31
--- 7		3		1		2023-01-30	2023-02-01
--- 8		2		1		2023-02-01	2023-02-03
--- 7		1		1		2023-02-05	2023-02-08
-INSERT INTO
-	On_Call (Nurse, BlockFloor, BlockCode, Start, "End")
-VALUES
-	(6, 2, 1, '2023-01-27', '2023-01-31'),
-	(7, 3, 1, '2023-01-30', '2023-02-01'),
-	(8, 2, 1, '2023-02-01', '2023-02-03'),
-	(7, 1, 1, '2023-02-05', '2023-02-08');
+INSERT INTO Prescribes VALUES(1,100000001,1,'2018-04-24 10:47',13216584,'5');
+INSERT INTO Prescribes VALUES(9,100000004,2,'2018-04-27 10:53',86213939,'10');
+INSERT INTO Prescribes VALUES(9,100000004,2,'2018-04-30 16:53',NULL,'5');
 
--- Patient
--- SSN 		Name		Address									Phone		InsuranceID		PCP
--- 9		Kobe		'48 Finch Ave. Woodside, NY 11377'		'63045'		100				1	
--- 10		Nancy		'4 San Juan Ave. Grove City, OH 43123'	'45879'		101				2	
--- 11		Iris		'371 Locust Drive Glenview, IL 60025'	'87564'		102				3
-INSERT INTO
-	Patient (SSN, Name, Address, Phone, InsuranceID, PCP)
-VALUES
-	(
-		9,
-		'Kobe',
-		'48 Finch Ave. Woodside, NY 11377',
-		'63045',
-		100,
-		1
-	),
-	(
-		10,
-		'Nancy',
-		'4 San Juan Ave. Grove City, OH 43123',
-		'45879',
-		101,
-		2
-	),
-	(
-		11,
-		'Iris',
-		'371 Locust Drive Glenview, IL 60025',
-		'87564',
-		102,
-		3
-	);
+INSERT INTO Block VALUES(1,1);
+INSERT INTO Block VALUES(1,2);
+INSERT INTO Block VALUES(1,3);
+INSERT INTO Block VALUES(2,1);
+INSERT INTO Block VALUES(2,2);
+INSERT INTO Block VALUES(2,3);
+INSERT INTO Block VALUES(3,1);
+INSERT INTO Block VALUES(3,2);
+INSERT INTO Block VALUES(3,3);
+INSERT INTO Block VALUES(4,1);
+INSERT INTO Block VALUES(4,2);
+INSERT INTO Block VALUES(4,3);
 
--- Medication
--- Code				Name			Brand				Description
--- 1				'remdesivir'	'Zydus Cadila'		'antiviral medicine that works against severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)'
--- 2				'prilosec'		'AstraZeneca'		'a prescription and over-the-counter medicine used to treat the symptoms of gastroesophageal reflux disease (GERD), gastric ulcers, and other conditions caused by excess stomach acid'
--- 3				'ibrutinib'		'Pharmacyclics LLC'	'a prescription medication used as an inhibitor of Bruton's tyrosine kinase (BTK) used to treat patients with mantle cell lymphoma (MCL)'
-INSERT INTO
-	Medication (Code, Name, Brand, Description)
-VALUES
-	(
-		1,
-		'remdesivir',
-		'Zydus Cadila',
-		'antiviral medicine that works against severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)'
-	),
-	(
-		2,
-		'prilosec',
-		'AstraZeneca',
-		'a prescription and over-the-counter medicine used to treat the symptoms of gastroesophageal reflux disease (GERD), gastric ulcers, and other conditions caused by excess stomach acid'
-	),
-	(
-		3,
-		'ibrutinib',
-		'Pharmacyclics LLC',
-		'a prescription medication used as an inhibitor of Bruton tyrosine kinase (BTK) used to treat patients with mantle cell lymphoma (MCL)'
-	);
+INSERT INTO Room VALUES(101,'Single',1,1,false);
+INSERT INTO Room VALUES(102,'Single',1,1,false);
+INSERT INTO Room VALUES(103,'Single',1,1,false);
+INSERT INTO Room VALUES(111,'Single',1,2,false);
+INSERT INTO Room VALUES(112,'Single',1,2,true);
+INSERT INTO Room VALUES(113,'Single',1,2,false);
+INSERT INTO Room VALUES(121,'Single',1,3,false);
+INSERT INTO Room VALUES(122,'Single',1,3,false);
+INSERT INTO Room VALUES(123,'Single',1,3,false);
+INSERT INTO Room VALUES(201,'Single',2,1,true);
+INSERT INTO Room VALUES(202,'Single',2,1,false);
+INSERT INTO Room VALUES(203,'Single',2,1,false);
+INSERT INTO Room VALUES(211,'Single',2,2,false);
+INSERT INTO Room VALUES(212,'Single',2,2,false);
+INSERT INTO Room VALUES(213,'Single',2,2,true);
+INSERT INTO Room VALUES(221,'Single',2,3,false);
+INSERT INTO Room VALUES(222,'Single',2,3,false);
+INSERT INTO Room VALUES(223,'Single',2,3,false);
+INSERT INTO Room VALUES(301,'Single',3,1,false);
+INSERT INTO Room VALUES(302,'Single',3,1,true);
+INSERT INTO Room VALUES(303,'Single',3,1,false);
+INSERT INTO Room VALUES(311,'Single',3,2,false);
+INSERT INTO Room VALUES(312,'Single',3,2,false);
+INSERT INTO Room VALUES(313,'Single',3,2,false);
+INSERT INTO Room VALUES(321,'Single',3,3,true);
+INSERT INTO Room VALUES(322,'Single',3,3,false);
+INSERT INTO Room VALUES(323,'Single',3,3,false);
+INSERT INTO Room VALUES(401,'Single',4,1,false);
+INSERT INTO Room VALUES(402,'Single',4,1,true);
+INSERT INTO Room VALUES(403,'Single',4,1,false);
+INSERT INTO Room VALUES(411,'Single',4,2,false);
+INSERT INTO Room VALUES(412,'Single',4,2,false);
+INSERT INTO Room VALUES(413,'Single',4,2,false);
+INSERT INTO Room VALUES(421,'Single',4,3,true);
+INSERT INTO Room VALUES(422,'Single',4,3,false);
+INSERT INTO Room VALUES(423,'Single',4,3,false);
 
--- Appointment
--- AppointmentID		Patient		PrepNurse		Physician		Start 					"End" 					ExaminationRoom
--- 1					9			6				1				2023-01-29 16:30:00		2023-01-29 17:30:00		'Cardiovascular Exam Room'
--- 2					10			NULL			2				2023-01-31 19:00:00		2023-01-31 19:30:00		'X-Ray Examination Room'
--- 3					11			8				3				2023-02-06 09:00:00		2023-02-06 10:15:00		'Radiation Exam Room'
-INSERT INTO
-	Appointment (
-		AppointmentID,
-		Patient,
-		PrepNurse,
-		Physician,
-		Start,
-		"End",
-		ExaminationRoom
-	)
-VALUES
-	(
-		1,
-		9,
-		6,
-		1,
-		'2023-01-29 16:30:00',
-		'2023-01-29 17:30:00',
-		'Cardiovascular Exam Room'
-	),
-	(
-		2,
-		10,
-		NULL,
-		2,
-		'2023-01-31 19:00:00',
-		'2023-01-31 19:30:00',
-		'X-Ray Examination Room'
-	),
-	(
-		3,
-		11,
-		8,
-		3,
-		'2023-02-06 09:00:00',
-		'2023-02-06 10:15:00',
-		'Radiation Exam Room'
-	),
-	(
-		4,
-		9,
-		6,
-		4,
-		'2023-02-15 10:00:00',
-		'2023-02-15 11:00:00',
-		'Cardiovascular Exam Room'
-	);
+INSERT INTO On_Call VALUES(101,1,1,'2018-11-04 11:00','2018-11-04 19:00');
+INSERT INTO On_Call VALUES(101,1,2,'2018-11-04 11:00','2018-11-04 19:00');
+INSERT INTO On_Call VALUES(102,1,3,'2018-11-04 11:00','2018-11-04 19:00');
+INSERT INTO On_Call VALUES(103,1,1,'2018-11-04 19:00','2018-11-05 03:00');
+INSERT INTO On_Call VALUES(103,1,2,'2018-11-04 19:00','2018-11-05 03:00');
+INSERT INTO On_Call VALUES(103,1,3,'2018-11-04 19:00','2018-11-05 03:00');
 
--- Prescribes
--- Physician	Patient		Medication		Date			Appointment		Dose
--- 9			9			1				'2023-02-10'	NULL			'100 mg'
--- 2			10			2				'2023-01-31'	2				'20 mg'
--- 3			11			3				'2023-02-06'	3				'420 mg'
-INSERT INTO
-	Prescribes (
-		Physician,
-		Patient,
-		Medication,
-		Date,
-		Appointment,
-		Dose
-	)
-VALUES
-	(1, 9, 1, '2023-02-10', 1, '100 mg'),
-	(2, 10, 2, '2023-01-31', NULL, '20 mg'),
-	(3, 11, 3, '2023-02-06', 3, '420 mg'),
-	(9, 10, 1, '2023-02-11', NULL, '100 mg');
+INSERT INTO Stay VALUES(3215,100000001,111,'2018-05-01','2018-05-04');
+INSERT INTO Stay VALUES(3216,100000003,123,'2018-05-03','2018-05-14');
+INSERT INTO Stay VALUES(3217,100000004,112,'2018-05-02','2018-05-03');
 
--- Stay
--- StayID		Patient		Room		Start					"End"
--- 1			10			124			'2023-01-31'			'2023-02-04'
--- 2			11			121			'2023-02-06 14:30:00'	'2023-02-22 17:30:00'
--- 3			9			124			'2023-02-10'			'2023-02-13'
-INSERT INTO
-	Stay (StayID, Patient, Room, Start, "End")
-VALUES
-	(1, 10, 124, '2023-01-31', '2023-02-04'),
-	(
-		2,
-		11,
-		121,
-		'2023-02-06 14:30:00',
-		'2023-02-22 17:30:00'
-	),
-	(3, 9, 124, '2023-02-10', '2023-02-13');
+INSERT INTO Undergoes VALUES(100000001,6,3215,'2018-05-02',3,101);
+INSERT INTO Undergoes VALUES(100000001,2,3215,'2018-05-03',7,101);
+INSERT INTO Undergoes VALUES(100000004,1,3217,'2018-05-07',3,102);
+INSERT INTO Undergoes VALUES(100000004,5,3217,'2018-05-09',6,NULL);
+INSERT INTO Undergoes VALUES(100000001,7,3217,'2018-05-10',7,101);
+INSERT INTO Undergoes VALUES(100000004,4,3217,'2018-05-13',3,103);
 
--- Undergoes
--- Patient 		Procedure		Stay		Date			Physician		AssistingNurse
--- 9			1				3			'2023-02-11'	1				6
--- 10			4				1			'2023-02-02'	2				NULL
--- 11			5				2			'2023-02-06'	3				8
-INSERT INTO
-	Undergoes (
-		Patient,
-		Procedure,
-		Stay,
-		Date,
-		Physician,
-		AssistingNurse
-	)
-VALUES
-	(9, 1, 3, '2023-02-11', 1, 6),
-	(10, 4, 1, '2023-02-02', 2, NULL),
-	(11, 3, 2, '2023-02-06', 3, 8);
+INSERT INTO Trained_In VALUES(3,1,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(3,2,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(3,5,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(3,6,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(3,7,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(6,2,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(6,5,'2017-01-01','2017-12-31');
+INSERT INTO Trained_In VALUES(6,6,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,1,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,2,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,3,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,4,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,5,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,6,'2018-01-01','2018-12-31');
+INSERT INTO Trained_In VALUES(7,7,'2018-01-01','2018-12-31');
 
 /* Queries */
 -- Q1. Names of all physicians who are trained in procedure name "bypass surgery"

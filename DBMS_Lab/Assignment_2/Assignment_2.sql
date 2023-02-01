@@ -322,7 +322,7 @@ INSERT INTO Trained_In VALUES(7,7,'2018-01-01','2018-12-31');
 
 /* Queries */
 -- Q1. Names of all physicians who are trained in procedure name "bypass surgery"
-SELECT
+SELECT DISTINCT
 	Ph.Name
 FROM
 	Physician as Ph
@@ -331,8 +331,8 @@ FROM
 WHERE
 	Pr.Name = 'bypass surgery';
 
--- Q2
-SELECT
+-- Q2. Names of all physicians trained in 'bypass surgery' and affiliated with 'cardiology'
+SELECT DISTINCT
 	Ph.name
 FROM
 	Physician as Ph
@@ -344,7 +344,7 @@ FROM
 			FROM
 				Department
 			WHERE
-				Name = 'Cardiology'
+				Name = 'cardiology'
 		)
 	)
 	JOIN Trained_In as Tr ON Tr.Physician = Ph.EmployeeID
@@ -353,7 +353,7 @@ WHERE
 	Pr.name = 'bypass surgery';
 
 -- Q3
-SELECT
+SELECT DISTINCT
 	Name
 FROM
 	Nurse as N
@@ -374,18 +374,18 @@ WHERE
 	PT.SSN = PC.Patient;
 
 -- Q5
-SELECT
+SELECT DISTINCT
 	PT.Name,
 	PT.InsuranceID
 FROM
 	Patient as PT
-	JOIN Room as R ON R.Type = 'ICU'
+	JOIN Room as R ON R.Type = 'icu'
 	JOIN Stay as S ON S.Patient = PT.SSN
 WHERE
 	S."End" - S.Start >= interval '15 days';
 
 -- Q6
-SELECT
+SELECT DISTINCT
 	N.Name as Nurse_name
 FROM
 	Nurse as N
@@ -395,7 +395,7 @@ WHERE
 	U.AssistingNurse = N.EmployeeID;
 
 -- Q7
-SELECT
+SELECT DISTINCT
 	N.Name as Assisting_Nurse,
 	N.Position as Nurse_position,
 	(
@@ -422,17 +422,32 @@ WHERE
 	N.EmployeeID = U.AssistingNurse;
 
 -- Q8
-SELECT
-	Ph.Name
+-- Here I have also considered the case when the physician is certified at some point of time
+-- but when the operation was happening, their certification is not yet issued or has expired
+SELECT DISTINCT
+	(
+		SELECT 
+			Physician.Name
+		FROM 
+			Physician
+		WHERE 
+			Physician.EmployeeID = Undergoes.Physician 
+	)
 FROM
-	Physician as Ph
-	JOIN Trained_In as TI ON TI.Physician = Ph.EmployeeID
-	JOIN Undergoes as U ON U.Physician = Ph.EmployeeID
+	Undergoes
 WHERE
-	TI.Treatment != U.Procedure;
+	Undergoes.Procedure NOT IN
+	(
+		SELECT 
+			Treatment
+		FROM
+			Trained_In
+		WHERE
+			Trained_In.Physician = Undergoes.Physician and Undergoes.Date >= Trained_In.CertificationDate
+	);
 
 -- Q9
-SELECT
+SELECT DISTINCT
 	Ph.Name
 FROM
 	Physician as Ph
@@ -443,7 +458,7 @@ WHERE
 	and U.Date > Tr.CertificationExpires;
 
 -- Q10
-SELECT
+SELECT DISTINCT
 	Ph.Name as Physician,
 	(
 		SELECT
@@ -491,7 +506,7 @@ WITH
 							JOIN Affiliated_with as Aw ON Aw.Physician = Ph.EmployeeID
 							JOIN Department as Dp ON Dp.DepartmentID = Aw.Department
 						WHERE
-							Dp.Name = 'Cardiology'
+							Dp.Name = 'cardiology'
 					)
 			) AS AppointmentsWithCardiologist,
 			(
@@ -516,7 +531,7 @@ WITH
 		FROM
 			Patient as Pt
 	)
-SELECT
+SELECT DISTINCT
 	Patient,
 	(
 		SELECT
@@ -534,31 +549,42 @@ WHERE
 	and PhysicianPrescribed >= 1
 	and Physician NOT IN (
 		SELECT
-			EmployeeID
+			Head
 		FROM
-			Physician
-		WHERE
-			Physician.Position = 'Head of Department'
+			Department
 	);
 
 -- Q12
+WITH MedicinePatient as (
+	SELECT DISTINCT
+		MC.Name as Medicine,
+		Mc.Brand as Brand,
+		Pc.Patient as Patient
+	FROM
+		Medication as MC
+		JOIN Prescribes as Pc ON Pc.medication = Mc.Code
+),
+countPrescribed as (
+	SELECT
+		Medicine,
+		Brand,
+		count(*) as times_prescribed
+	FROM
+		MedicinePatient
+	GROUP BY
+		Medicine,
+		Brand
+),
+maxPrescribed as (
+	SELECT
+		MAX(times_prescribed) as max_pres
+	FROM
+		countPrescribed
+)
 SELECT
 	Medicine,
 	Brand
 FROM
-	(
-		SELECT
-			MC.Name as Medicine,
-			MC.Brand,
-			COUNT(*) as number_of_times
-		FROM
-			Medication as MC
-			JOIN Prescribes as Pc ON Pc.medication = MC.code
-		GROUP BY
-			MC.Name,
-			MC.Brand
-		ORDER BY
-			number_of_times DESC
-		LIMIT
-			1
-	) as temp;
+	countPrescribed, maxPrescribed
+WHERE
+	countPrescribed.times_prescribed = maxPrescribed.max_pres;

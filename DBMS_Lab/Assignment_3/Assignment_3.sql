@@ -1,175 +1,175 @@
 /* creating tables */
 -- physician
 create table
-	physician (
-		employeeid integer primary key,
-		name text not null,
-		position text not null,
-		ssn integer not null
-	);
+    physician (
+        employeeid integer primary key,
+        name text not null,
+        position text not null,
+        ssn integer not null
+    );
 
 -- procedure
 create table
-	`procedure` (
-		code integer primary key,
-		name text not null,
-		cost integer not null
-	);
+    `procedure` (
+        code integer primary key,
+        name text not null,
+        cost integer not null
+    );
 
 -- medication
 create table
-	medication (
-		code integer primary key,
-		name text not null,
-		brand text not null,
-		description text not null
-	);
+    medication (
+        code integer primary key,
+        name text not null,
+        brand text not null,
+        description text not null
+    );
 
 -- block
 create table
-	block (
-		floor integer not null,
-		code integer not null,
-		primary key (floor, code)
-	);
+    block (
+        floor integer not null,
+        code integer not null,
+        primary key (floor, code)
+    );
 
 -- nurse
 create table
-	nurse (
-		employeeid integer primary key,
-		name text not null,
-		position text not null,
-		registered boolean not null,
-		ssn integer not null
-	);
+    nurse (
+        employeeid integer primary key,
+        name text not null,
+        position text not null,
+        registered boolean not null,
+        ssn integer not null
+    );
 
 -- trained_in
 create table
-	trained_in (
-		physician integer not null,
-		treatment integer not null,
-		certificationdate timestamp not null,
-		certificationexpires timestamp not null,
-		primary key (physician, treatment),
-		foreign key (physician) references physician (employeeid),
-		foreign key (treatment) references `procedure` (code)
-	);
+    trained_in (
+        physician integer not null,
+        treatment integer not null,
+        certificationdate timestamp not null,
+        certificationexpires timestamp not null,
+        primary key (physician, treatment),
+        foreign key (physician) references physician (employeeid),
+        foreign key (treatment) references `procedure` (code)
+    );
 
 -- department
 create table
-	department (
-		departmentid integer primary key,
-		name text not null,
-		head integer not null,
-		foreign key (head) references physician (employeeid)
-	);
+    department (
+        departmentid integer primary key,
+        name text not null,
+        head integer not null,
+        foreign key (head) references physician (employeeid)
+    );
 
 -- affiliated_with
 create table
-	affiliated_with (
-		physician integer not null,
-		department integer not null,
-		primaryaffiliation boolean not null,
-		foreign key (physician) references physician (employeeid),
-		foreign key (department) references department (departmentid),
-		primary key (physician, department)
-	);
+    affiliated_with (
+        physician integer not null,
+        department integer not null,
+        primaryaffiliation boolean not null,
+        foreign key (physician) references physician (employeeid),
+        foreign key (department) references department (departmentid),
+        primary key (physician, department)
+    );
 
 -- patient
 create table
-	patient (
-		ssn integer primary key,
-		name text not null,
-		address text not null,
-		phone text not null,
-		insuranceid integer not null,
-		pcp integer not null,
-		foreign key (pcp) references physician (employeeid)
-	);
+    patient (
+        ssn integer primary key,
+        name text not null,
+        address text not null,
+        phone text not null,
+        insuranceid integer not null,
+        pcp integer not null,
+        foreign key (pcp) references physician (employeeid)
+    );
 
 -- room
 create table
-	room (
-		number integer primary key,
-		type text not null,
-		blockfloor integer not null,
-		blockcode integer not null,
-		unavailable boolean not null,
-		foreign key (blockfloor, blockcode) references block (floor, code)
-	);
+    room (
+        number integer primary key,
+        type text not null,
+        blockfloor integer not null,
+        blockcode integer not null,
+        unavailable boolean not null,
+        foreign key (blockfloor, blockcode) references block (floor, code)
+    );
 
 -- on_call, here "end" is used called end is a keyword in postgresql
 create table
-	on_call (
-		nurse integer not null,
-		blockfloor integer not null,
-		blockcode integer not null,
-		start timestamp not null,
-		end timestamp not null,
-		foreign key (nurse) references nurse (employeeid),
-		foreign key (blockfloor, blockcode) references block (floor, code),
-		primary key (nurse, blockfloor, blockcode, start, end)
-	);
+    on_call (
+        nurse integer not null,
+        blockfloor integer not null,
+        blockcode integer not null,
+        start timestamp not null,
+        end timestamp not null,
+        foreign key (nurse) references nurse (employeeid),
+        foreign key (blockfloor, blockcode) references block (floor, code),
+        primary key (nurse, blockfloor, blockcode, start, end)
+    );
 
 -- stay
 create table
-	stay (
-		stayid integer primary key,
-		patient integer not null,
-		room integer not null,
-		start timestamp not null,
-		end timestamp not null,
-		foreign key (room) references room (number),
-		foreign key (patient) references patient (ssn)
-	);
+    stay (
+        stayid integer primary key,
+        patient integer not null,
+        room integer not null,
+        start timestamp not null,
+        end timestamp not null,
+        foreign key (room) references room (number),
+        foreign key (patient) references patient (ssn)
+    );
 
 -- undergoes
 create table
-	undergoes (
-		patient integer not null,
-		`procedure` integer not null,
-		stay integer not null,
-		date timestamp not null,
-		physician integer not null,
-		assistingnurse integer,
-		primary key (patient, `procedure`, stay, date),
-		foreign key (patient) references patient (ssn),
-		foreign key (`procedure`) references `procedure` (code),
-		foreign key (stay) references stay (stayid),
-		foreign key (physician) references physician (employeeid),
-		foreign key (assistingnurse) references nurse (employeeid)
-	);
+    undergoes (
+        patient integer not null,
+        `procedure` integer not null,
+        stay integer not null,
+        date timestamp not null,
+        physician integer not null,
+        assistingnurse integer,
+        primary key (patient, `procedure`, stay, date),
+        foreign key (patient) references patient (ssn),
+        foreign key (`procedure`) references `procedure` (code),
+        foreign key (stay) references stay (stayid),
+        foreign key (physician) references physician (employeeid),
+        foreign key (assistingnurse) references nurse (employeeid)
+    );
 
 -- appointment
 create table
-	appointment (
-		appointmentid integer primary key,
-		patient integer not null,
-		prepnurse integer,
-		physician integer not null,
-		start timestamp not null,
-		end timestamp not null,
-		examinationroom text not null,
-		foreign key (patient) references patient (ssn),
-		foreign key (prepnurse) references nurse (employeeid),
-		foreign key (physician) references physician (employeeid)
-	);
+    appointment (
+        appointmentid integer primary key,
+        patient integer not null,
+        prepnurse integer,
+        physician integer not null,
+        start timestamp not null,
+        end timestamp not null,
+        examinationroom text not null,
+        foreign key (patient) references patient (ssn),
+        foreign key (prepnurse) references nurse (employeeid),
+        foreign key (physician) references physician (employeeid)
+    );
 
 -- prescribes
 create table
-	prescribes (
-		physician integer not null,
-		patient integer not null,
-		medication integer not null,
-		date timestamp not null,
-		appointment integer,
-		dose text not null,
-		primary key (physician, patient, medication, date),
-		foreign key (physician) references physician (employeeid),
-		foreign key (patient) references patient (ssn),
-		foreign key (medication) references medication (code),
-		foreign key (appointment) references appointment (appointmentid)
-	);
+    prescribes (
+        physician integer not null,
+        patient integer not null,
+        medication integer not null,
+        date timestamp not null,
+        appointment integer,
+        dose text not null,
+        primary key (physician, patient, medication, date),
+        foreign key (physician) references physician (employeeid),
+        foreign key (patient) references patient (ssn),
+        foreign key (medication) references medication (code),
+        foreign key (appointment) references appointment (appointmentid)
+    );
 
 /* populating data */
 insert into physician values(1,'alan donald','intern',111111111);
@@ -323,278 +323,278 @@ insert into trained_in values(7,7,'2018-01-01','2018-12-31');
 /* queries */
 -- q1. names of all physicians who are trained in `procedure` name "bypass surgery"
 select distinct
-	ph.name
+    ph.name
 from
-	physician as ph
-	join trained_in as tr on tr.physician = ph.employeeid
-	join `procedure` as pr on pr.code = tr.treatment
+    physician as ph
+    join trained_in as tr on tr.physician = ph.employeeid
+    join `procedure` as pr on pr.code = tr.treatment
 where
-	pr.name = 'bypass surgery';
+    pr.name = 'bypass surgery';
 
 -- q2. names of all physicians trained in 'bypass surgery' and affiliated with 'cardiology'
 select distinct
-	ph.name
+    ph.name
 from
-	physician as ph
-	join affiliated_with as aw on (aw.physician, aw.department) = (
-		ph.employeeid,
-		(
-			select
-				departmentid
-			from
-				department
-			where
-				name = 'cardiology'
-		)
-	)
-	join trained_in as tr on tr.physician = ph.employeeid
-	join `procedure` as pr on pr.code = tr.treatment
+    physician as ph
+    join affiliated_with as aw on (aw.physician, aw.department) = (
+        ph.employeeid,
+        (
+            select
+                departmentid
+            from
+                department
+            where
+                name = 'cardiology'
+        )
+    )
+    join trained_in as tr on tr.physician = ph.employeeid
+    join `procedure` as pr on pr.code = tr.treatment
 where
-	pr.name = 'bypass surgery';
+    pr.name = 'bypass surgery';
 
 -- q3
 select distinct
-	name
+    name
 from
-	nurse as n
-	join room as r on r.number = 123
-	join on_call as oc on (oc.blockfloor, oc.blockcode) = (r.blockfloor, r.blockcode)
+    nurse as n
+    join room as r on r.number = 123
+    join on_call as oc on (oc.blockfloor, oc.blockcode) = (r.blockfloor, r.blockcode)
 where
-	oc.nurse = n.employeeid;
+    oc.nurse = n.employeeid;
 
 -- q4
 select
-	pt.name,
-	pt.address
+    pt.name,
+    pt.address
 from
-	patient as pt
-	join medication as mc on mc.name = 'remdesivir'
-	join prescribes as pc on pc.medication = mc.code
+    patient as pt
+    join medication as mc on mc.name = 'remdesivir'
+    join prescribes as pc on pc.medication = mc.code
 where
-	pt.ssn = pc.patient;
+    pt.ssn = pc.patient;
 
 -- q5
 select distinct
-	pt.name,
-	pt.insuranceid
+    pt.name,
+    pt.insuranceid
 from
-	patient as pt
-	join room as r on r.type = 'icu'
-	join stay as s on s.patient = pt.ssn
+    patient as pt
+    join room as r on r.type = 'icu'
+    join stay as s on s.patient = pt.ssn
 where
-	s.end - s.start >= interval '15 days';
+    s.end - s.start >= interval '15 days';
 
 -- q6
 select distinct
-	n.name as nurse_name
+    n.name as nurse_name
 from
-	nurse as n
-	join `procedure` as pr on pr.name = 'bypass surgery'
-	join undergoes as u on u.`procedure` = pr.code
+    nurse as n
+    join `procedure` as pr on pr.name = 'bypass surgery'
+    join undergoes as u on u.`procedure` = pr.code
 where
-	u.assistingnurse = n.employeeid;
+    u.assistingnurse = n.employeeid;
 
 -- q7
 select distinct
-	n.name as assisting_nurse,
-	n.position as nurse_position,
-	(
-		select
-			name
-		from
-			patient as pt
-		where
-			u.patient = pt.ssn
-	) as patient_name,
-	(
-		select
-			name
-		from
-			physician as ph
-		where
-			u.physician = ph.employeeid
-	) as physician_name
+    n.name as assisting_nurse,
+    n.position as nurse_position,
+    (
+        select
+            name
+        from
+            patient as pt
+        where
+            u.patient = pt.ssn
+    ) as patient_name,
+    (
+        select
+            name
+        from
+            physician as ph
+        where
+            u.physician = ph.employeeid
+    ) as physician_name
 from
-	nurse as n
-	join `procedure` as pr on pr.name = 'bypass surgery'
-	join undergoes as u on u.`procedure` = pr.code
+    nurse as n
+    join `procedure` as pr on pr.name = 'bypass surgery'
+    join undergoes as u on u.`procedure` = pr.code
 where
-	n.employeeid = u.assistingnurse;
+    n.employeeid = u.assistingnurse;
 
 -- q8
 -- here i have also considered the case when the physician is certified at some point of time
 -- but when the operation was happening, their certification is not yet issued or has expired
 select distinct
-	(
-		select 
-			physician.name
-		from 
-			physician
-		where 
-			physician.employeeid = undergoes.physician 
-	)
+    (
+        select 
+            physician.name
+        from 
+            physician
+        where 
+            physician.employeeid = undergoes.physician 
+    )
 from
-	undergoes
+    undergoes
 where
-	undergoes.`procedure` not in
-	(
-		select 
-			treatment
-		from
-			trained_in
-		where
-			trained_in.physician = undergoes.physician and undergoes.date >= trained_in.certificationdate
-	);
+    undergoes.`procedure` not in
+    (
+        select 
+            treatment
+        from
+            trained_in
+        where
+            trained_in.physician = undergoes.physician and undergoes.date >= trained_in.certificationdate
+    );
 
 -- q9
 select distinct
-	ph.name
+    ph.name
 from
-	physician as ph
-	join trained_in as tr on tr.physician = ph.employeeid
-	join undergoes as u on u.physician = ph.employeeid
+    physician as ph
+    join trained_in as tr on tr.physician = ph.employeeid
+    join undergoes as u on u.physician = ph.employeeid
 where
-	tr.treatment = u.`procedure`
-	and u.date > tr.certificationexpires;
+    tr.treatment = u.`procedure`
+    and u.date > tr.certificationexpires;
 
 -- q10
 select distinct
-	ph.name as physician,
-	(
-		select
-			name
-		from
-			`procedure` as pr
-		where
-			pr.code = u.`procedure`
-	) as `procedure`,
-	u.date,
-	(
-		select
-			name
-		from
-			patient as pt
-		where
-			pt.ssn = u.patient
-	) as patient
+    ph.name as physician,
+    (
+        select
+            name
+        from
+            `procedure` as pr
+        where
+            pr.code = u.`procedure`
+    ) as `procedure`,
+    u.date,
+    (
+        select
+            name
+        from
+            patient as pt
+        where
+            pt.ssn = u.patient
+    ) as patient
 from
-	physician as ph
-	join trained_in as tr on tr.physician = ph.employeeid
-	join undergoes as u on u.physician = ph.employeeid
+    physician as ph
+    join trained_in as tr on tr.physician = ph.employeeid
+    join undergoes as u on u.physician = ph.employeeid
 where
-	tr.treatment = u.`procedure`
-	and u.date > tr.certificationexpires;
+    tr.treatment = u.`procedure`
+    and u.date > tr.certificationexpires;
 
 -- q11
 with
-	temp as (
-		select
-			pt.name as patient,
-			pt.pcp as physician,
-			(
-				select
-					count(*)
-				from
-					appointment as ap
-				where
-					ap.patient = pt.ssn
-					and ap.physician in (
-						select
-							ph.employeeid
-						from
-							physician as ph
-							join affiliated_with as aw on aw.physician = ph.employeeid
-							join department as dp on dp.departmentid = aw.department
-						where
-							dp.name = 'cardiology'
-					)
-			) as appointmentswithcardiologist,
-			(
-				select
-					count(*)
-				from
-					prescribes as pr
-				where
-					pr.patient = pt.ssn
-					and pr.physician = pt.pcp
-			) as physicianprescribed,
-			(
-				select
-					count(*)
-				from
-					undergoes as u
-					join `procedure` as pr on pr.code = u.`procedure`
-				where
-					u.patient = pt.ssn
-					and pr.cost > 5000
-			) as costatleastfivek
-		from
-			patient as pt
-	)
+    temp as (
+        select
+            pt.name as patient,
+            pt.pcp as physician,
+            (
+                select
+                    count(*)
+                from
+                    appointment as ap
+                where
+                    ap.patient = pt.ssn
+                    and ap.physician in (
+                        select
+                            ph.employeeid
+                        from
+                            physician as ph
+                            join affiliated_with as aw on aw.physician = ph.employeeid
+                            join department as dp on dp.departmentid = aw.department
+                        where
+                            dp.name = 'cardiology'
+                    )
+            ) as appointmentswithcardiologist,
+            (
+                select
+                    count(*)
+                from
+                    prescribes as pr
+                where
+                    pr.patient = pt.ssn
+                    and pr.physician = pt.pcp
+            ) as physicianprescribed,
+            (
+                select
+                    count(*)
+                from
+                    undergoes as u
+                    join `procedure` as pr on pr.code = u.`procedure`
+                where
+                    u.patient = pt.ssn
+                    and pr.cost > 5000
+            ) as costatleastfivek
+        from
+            patient as pt
+    )
 select distinct
-	patient,
-	(
-		select
-			physician.name
-		from
-			physician
-		where
-			physician.employeeid = temp.physician
-	)
+    patient,
+    (
+        select
+            physician.name
+        from
+            physician
+        where
+            physician.employeeid = temp.physician
+    )
 from
-	temp
+    temp
 where
-	appointmentswithcardiologist >= 2
-	and costatleastfivek >= 1
-	and physicianprescribed >= 1
-	and physician not in (
-		select
-			head
-		from
-			department
-	);
+    appointmentswithcardiologist >= 2
+    and costatleastfivek >= 1
+    and physicianprescribed >= 1
+    and physician not in (
+        select
+            head
+        from
+            department
+    );
 
 -- q12
 with medicinepatient as (
-	select distinct
-		mc.name as medicine,
-		mc.brand as brand,
-		pc.patient as patient
-	from
-		medication as mc
-		join prescribes as pc on pc.medication = mc.code
+    select distinct
+        mc.name as medicine,
+        mc.brand as brand,
+        pc.patient as patient
+    from
+        medication as mc
+        join prescribes as pc on pc.medication = mc.code
 ),
 countprescribed as (
-	select
-		medicine,
-		brand,
-		count(*) as times_prescribed
-	from
-		medicinepatient
-	group by
-		medicine,
-		brand
+    select
+        medicine,
+        brand,
+        count(*) as times_prescribed
+    from
+        medicinepatient
+    group by
+        medicine,
+        brand
 ),
 maxprescribed as (
-	select
-		max(times_prescribed) as max_pres
-	from
-		countprescribed
+    select
+        max(times_prescribed) as max_pres
+    from
+        countprescribed
 )
 select
-	medicine,
-	brand
+    medicine,
+    brand
 from
-	countprescribed, maxprescribed
+    countprescribed, maxprescribed
 where
-	countprescribed.times_prescribed = maxprescribed.max_pres;
+    countprescribed.times_prescribed = maxprescribed.max_pres;
 
 -- q13
 select distinct
-	ph.name
+    ph.name
 from
-	physician as ph
-	join trained_in as tr on tr.physician = ph.employeeid
-	join procedure as pr on pr.code = tr.treatment
+    physician as ph
+    join trained_in as tr on tr.physician = ph.employeeid
+    join `procedure` as pr on pr.code = tr.treatment
 where
-	pr.name = '{}';
+    pr.name = '{}';

@@ -64,7 +64,7 @@ sql_queries = {
         join room as r on r.type = 'icu'
         join stay as s on s.patient = pt.ssn
     where
-        s.end - s.start >= interval '15 days';
+        timestampdiff(DAY, s.start, s.end) >= 15;
     """,
     6: """
     select distinct
@@ -112,7 +112,7 @@ sql_queries = {
                 physician
             where 
                 physician.employeeid = undergoes.physician 
-        )
+        ) as physician
     from
         undergoes
     where
@@ -220,7 +220,7 @@ sql_queries = {
                 physician
             where
                 physician.employeeid = temp.physician
-        )
+        ) as physician
     from
         temp
     where
@@ -275,7 +275,7 @@ sql_queries = {
     from
         physician as ph
         join trained_in as tr on tr.physician = ph.employeeid
-        join procedure as pr on pr.code = tr.treatment
+        join `procedure` as pr on pr.code = tr.treatment
     where
         pr.name = '{}';
     """
@@ -313,6 +313,7 @@ while 1:
         elif query_no == 13:
             procedure = input("Enter the procedure name: ")
             query = sql_queries[query_no].format(procedure)
+            print(query)
         else:
             query = sql_queries[query_no]
 

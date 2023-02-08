@@ -1,5 +1,4 @@
 import mysql.connector as connector
-from sshtunnel import SSHTunnelForwarder
 from prettytable import PrettyTable
 
 sql_queries = {
@@ -281,22 +280,12 @@ sql_queries = {
     """
 }
 
-ssh_server = SSHTunnelForwarder(
-    ('10.5.18.69', 22),
-    ssh_username="20CS10038",
-    ssh_password="Surya_7777",
-    remote_bind_address=('localhost', 3306)
-)
-
-ssh_server.start()
-print("Connected to ssh server")
-
 connection = connector.connect(
-    host="localhost",
+    host="10.5.18.69",
     user="20CS10038",
     password="20CS10038",
     database="20CS10038",
-    port=ssh_server.local_bind_port,
+    port=3306,
     use_pure=True
 )
 
@@ -313,7 +302,6 @@ while 1:
         elif query_no == 13:
             procedure = input("Enter the procedure name: ")
             query = sql_queries[query_no].format(procedure)
-            print(query)
         else:
             query = sql_queries[query_no]
 
@@ -336,4 +324,3 @@ while 1:
         print("Error executing query")
 
 connection.close()
-ssh_server.close()

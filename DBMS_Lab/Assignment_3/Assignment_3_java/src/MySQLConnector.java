@@ -37,12 +37,14 @@ public class MySQLConnector {
 
                 String query;
 
-                if(key == 13){
+                if(key != 13){
                     query = MySQLQueries.get(key);
                 }
                 else {
-                    System.out.println("Enter procedure ");
-                    query = String.format(MySQLQueries.get(key), )
+                    Scanner scanner = new Scanner(System.in);
+                    System.out.print("Enter procedure: ");
+                    String procedure_to_replace = scanner.nextLine();
+                    query = String.format(MySQLQueries.get(key), procedure_to_replace.toLowerCase());
                 }
 
                 if(query == null){

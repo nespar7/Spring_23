@@ -313,12 +313,16 @@ while 1:
 
         rows = cursor.fetchall()
 
-        table = PrettyTable(columns)
+        if len(rows) == 0:
+            print("\nEmpty Set\n")
 
-        for row in rows:
-            table.add_row(row)
+        else:
+            table = PrettyTable(columns)
 
-        print(table)           
+            for row in rows:
+                table.add_row(row)
+
+            print(table)
 
     except:
         print("Error executing query")

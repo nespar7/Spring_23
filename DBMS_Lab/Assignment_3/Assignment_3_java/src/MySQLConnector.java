@@ -33,7 +33,10 @@ public class MySQLConnector {
                 System.out.println("Enter query number(1-13, 0 for exit): ");
                 java.lang.Integer key = scan.nextInt();
 
-                if(key == 0) break;
+                if(key == 0) {
+                    System.out.println("Bye have a nice day ;))");
+                    break;
+                }
 
                 String query;
 

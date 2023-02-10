@@ -1,8 +1,8 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 
 public class MySQLConnector {
     private String url;
@@ -35,7 +35,15 @@ public class MySQLConnector {
 
                 if(key == 0) break;
 
-                String query = MySQLQueries.get(key);
+                String query;
+
+                if(key == 13){
+                    query = MySQLQueries.get(key);
+                }
+                else {
+                    System.out.println("Enter procedure ");
+                    query = String.format(MySQLQueries.get(key), )
+                }
 
                 if(query == null){
                     System.out.println("Invalid query number");
@@ -49,31 +57,55 @@ public class MySQLConnector {
                 ResultSetMetaData md = results.getMetaData();
                 int cc = md.getColumnCount();
 
+                List<String[]> rows = new ArrayList<>();
                 String[] columns = new String[cc];
 
                 for(int i = 0;i < cc;i++){
                     columns[i] = md.getColumnName(i+1);
                 }
-
-                DefaultTableModel model = new DefaultTableModel(columns, 0);
+                rows.add(columns);
 
                 while (results.next()){
                     String[] row = new String[cc];
                     for(int i = 0;i < cc;i++){
                         row[i] = results.getString(i+1);
                     }
-                    model.addRow(row);
+                    rows.add(row);
                 }
 
-                JTable table = new JTable(model);
+                int[] maxColumnSize = new int[cc];
+                for (String[] row: rows){
+                    for(int i = 0;i < cc;i++){
+                        maxColumnSize[i] = Math.max(maxColumnSize[i], row[i].length());
+                    }
+                }
 
-                JScrollPane scrollPane = new JScrollPane(table);
+                String rowFormatString = "|";
+                for(int size: maxColumnSize){
+                    rowFormatString += " %-" + (size) + "s |";
+                }
 
-                JFrame frame = new JFrame();
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.add(scrollPane);
-                frame.pack();
-                frame.setVisible(true);
+                String delim = "+";
+                for(int size: maxColumnSize){
+                    delim += String.format("%-" + (size+2) + "s+", "-").replace(" ", "-");
+                }
+
+                if(rows.size() == 1){
+                    System.out.println("Empty Set");
+                }
+                else{
+                    System.out.println(delim);
+                    int i = 1;
+                    for(String[] row: rows){
+                        System.out.format(rowFormatString, (Object[]) row);
+                        System.out.println();
+                        if(i == 1){
+                            System.out.println(delim);
+                            i = 0;
+                        }
+                    }
+                    System.out.println(delim);
+                }
             }
 
             connection.close();

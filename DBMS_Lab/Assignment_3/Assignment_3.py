@@ -301,7 +301,7 @@ while 1:
             continue
         elif query_no == 13:
             procedure = input("Enter the procedure name: ")
-            query = sql_queries[query_no].format(procedure)
+            query = sql_queries[query_no].format(procedure.lower())
         else:
             query = sql_queries[query_no]
 

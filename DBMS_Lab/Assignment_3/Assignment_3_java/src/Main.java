@@ -113,7 +113,7 @@ public class Main {
                                 physician
                             where
                                 physician.employeeid = undergoes.physician
-                        )
+                        ) as physician
                     from
                         undergoes
                     where
@@ -221,7 +221,7 @@ public class Main {
                                 physician
                             where
                                 physician.employeeid = temp.physician
-                        )
+                        ) as physician
                     from
                         temp
                     where
@@ -269,6 +269,16 @@ public class Main {
                         countprescribed, maxprescribed
                     where
                         countprescribed.times_prescribed = maxprescribed.max_pres;
+                """);
+        connector.addQuery(13, """
+                    select distinct
+                        ph.name
+                    from
+                        physician as ph
+                        join trained_in as tr on tr.physician = ph.employeeid
+                        join `procedure` as pr on pr.code = tr.treatment
+                    where
+                        pr.name = '%s';
                 """);
         connector.connect();
     }

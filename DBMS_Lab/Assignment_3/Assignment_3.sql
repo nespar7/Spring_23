@@ -382,7 +382,7 @@ from
     join room as r on r.type = 'icu'
     join stay as s on s.patient = pt.ssn
 where
-    s.end - s.start >= interval '15 days';
+    timestampdiff(DAY, s.start, s.end) >= 15;
 
 -- q6
 select distinct
@@ -432,7 +432,7 @@ select distinct
             physician
         where 
             physician.employeeid = undergoes.physician 
-    )
+    ) as physician
 from
     undergoes
 where
@@ -540,7 +540,7 @@ select distinct
             physician
         where
             physician.employeeid = temp.physician
-    )
+    ) as physician
 from
     temp
 where

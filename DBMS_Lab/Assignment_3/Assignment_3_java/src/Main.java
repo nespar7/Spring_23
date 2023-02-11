@@ -1,9 +1,12 @@
 public class Main {
     public static void main(String[] args) {
+        // Setting url, username, password
         String url = "jdbc:mysql://10.5.18.69:3306/20CS10038";
         String username = "20CS10038";
         String password = "20CS10038";
+        // Initialising a MySQLConnector object
         MySQLConnector connector = new MySQLConnector(url, username, password);
+        // Adding queries
         connector.addQuery(1, """
                     select distinct
                         ph.name
@@ -280,6 +283,8 @@ public class Main {
                     where
                         pr.name = '%s';
                 """);
+
+        // Connect to the database and execute the queries
         connector.connect();
     }
 }

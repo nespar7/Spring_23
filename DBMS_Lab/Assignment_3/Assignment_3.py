@@ -310,7 +310,7 @@ while 1:
             break
         # Print wrong query number for anything else
         elif query_no < 0 or query_no > 13:
-            print("Wrong query number")
+            print("Invalid query number entered")
             continue
         # Handling the formatting when 13 is selected
         elif query_no == 13:

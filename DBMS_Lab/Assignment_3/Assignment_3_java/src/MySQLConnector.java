@@ -39,7 +39,7 @@ public class MySQLConnector {
             // Infinite loop exits on 0
             while(true){
                 // Take query number as input
-                System.out.println("Select a query to run(1-13), 0 for exit: ");
+                System.out.print("Select a query to run(1-13), 0 for exit: ");
                 java.lang.Integer key = scan.nextInt();
 
                 // If zero, exit
@@ -66,72 +66,101 @@ public class MySQLConnector {
                     query = String.format(MySQLQueries.get(key), procedure.toLowerCase());
                 }
 
-                // If query is null (out of bound accessing the map) print invalid query message
+                // If query is null (out of bound accessing the map)
+                // print invalid query message and go to start of loop
                 if(query == null){
-                    System.out.println("Invalid query number");
+                    System.out.println("Invalid query number entered");
                     continue;
                 }
 
+                // create a Statement object for executing the query
                 Statement statement = connection.createStatement();
 
+                // Store the results of execution in results
                 ResultSet results = statement.executeQuery(query);
 
+                // md contains data about results, column_count is number of columns
                 ResultSetMetaData md = results.getMetaData();
-                int cc = md.getColumnCount();
+                int column_count = md.getColumnCount();
 
+                // Store rows in a list of string array(each row contains one entry per column)
                 List<String[]> rows = new ArrayList<>();
-                String[] columns = new String[cc];
+                // Column names stored as an array of Strings
+                String[] columns = new String[column_count];
 
-                for(int i = 0;i < cc;i++){
+                // Store column names from the metadata
+                for(int i = 0;i < column_count;i++){
                     columns[i] = md.getColumnName(i+1);
                 }
+
+                // Add the column names to the rows List
                 rows.add(columns);
 
+                // While there is a result
                 while (results.next()){
-                    String[] row = new String[cc];
-                    for(int i = 0;i < cc;i++){
+                    // Store the values for each column in a String array row
+                    String[] row = new String[column_count];
+                    for(int i = 0;i < column_count;i++){
                         row[i] = results.getString(i+1);
                     }
+                    // Add row to rows
                     rows.add(row);
                 }
 
-                int[] maxColumnSize = new int[cc];
-                for (String[] row: rows){
-                    for(int i = 0;i < cc;i++){
-                        maxColumnSize[i] = Math.max(maxColumnSize[i], row[i].length());
-                    }
-                }
-
-                String rowFormatString = "|";
-                for(int size: maxColumnSize){
-                    rowFormatString += " %-" + (size) + "s |";
-                }
-
-                String delim = "+";
-                for(int size: maxColumnSize){
-                    delim += String.format("%-" + (size+2) + "s+", "-").replace(" ", "-");
-                }
-
-                if(rows.size() == 1){
+                // If there is only one row(the column names), exit
+                if(rows.size() == 1) {
+                    System.out.println();
                     System.out.println("Empty Set");
+                    System.out.println();
                 }
+                // else print the formatted table
                 else{
-                    System.out.println(delim);
-                    int i = 1;
-                    for(String[] row: rows){
-                        System.out.format(rowFormatString, (Object[]) row);
-                        System.out.println();
-                        if(i == 1){
-                            System.out.println(delim);
-                            i = 0;
+                    // maxColumnSize stores the maximum length of a field for each column
+                    int[] maxColumnSize = new int[column_count];
+                    for (String[] row: rows){
+                        // increment maxColumnSize of that column if the current field is
+                        // longer than the previous maximum
+                        for(int i = 0;i < column_count;i++){
+                            maxColumnSize[i] = Math.max(maxColumnSize[i], row[i].length());
                         }
                     }
+
+                    // String to print formatted rows
+                    String rowFormatString = "|";
+                    for(int size: maxColumnSize){
+                        rowFormatString += " %-" + (size) + "s |";
+                    }
+
+                    // The delimiter string
+                    String delim = "+";
+                    for(int size: maxColumnSize){
+                        // print (size+2) whitespaces and replace then with "-"
+                        delim += String.format("%-" + (size+2) + "s+", "-").replace(" ", "-");
+                    }
+
+                    // Print starting delimiter
+                    System.out.println(delim);
+                    int columns_printing = 1;
+                    // Print each row
+                    for(String[] row: rows){
+                        // Print formatted row
+                        System.out.format(rowFormatString, (Object[]) row);
+                        System.out.println();
+                        // Print delimiter after columns
+                        if(columns_printing == 1){
+                            System.out.println(delim);
+                            columns_printing = 0;
+                        }
+                    }
+                    // Print ending delimiter
                     System.out.println(delim);
                 }
             }
 
+            // Close the connection
             connection.close();
         }
+        // If error trace it back
         catch (Exception err){
             err.printStackTrace();
         }

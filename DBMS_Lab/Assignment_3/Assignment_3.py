@@ -1,6 +1,9 @@
+# importing mysql connector and prettytable 
+# for printing tables in mysql style
 import mysql.connector as connector
 from prettytable import PrettyTable
 
+# Storing all the queries in a dictionary
 sql_queries = {
     1: """
         select distinct
@@ -268,6 +271,7 @@ sql_queries = {
     where
         countprescribed.times_prescribed = maxprescribed.max_pres;
     """,
+    # In this query we have a `{}` which can later be formatted to the input string 
     13: """
     select distinct
         ph.name
@@ -280,6 +284,7 @@ sql_queries = {
     """
 }
 
+# Starting the connection
 connection = connector.connect(
     host="10.5.18.69",
     user="20CS10038",
@@ -289,42 +294,61 @@ connection = connector.connect(
     use_pure=True
 )
 
+# Creating a cursor object for interacting
+# with mysql through the connection 
 cursor = connection.cursor()
 
+# Run an infinitie loop which breaks when user inputs 0
 while 1:
+    # Try to run the queries 
     try:
+        # Take query number as use input
         query_no = int(input("Select a query to run(1-13), 0 to exit: "))
+        # Break for 0
         if query_no == 0:
+            print("Bye have a nice day ;))")
             break
+        # Print wrong query number for anything else
         elif query_no < 0 or query_no > 13:
             print("Wrong query number")
             continue
+        # Handling the formatting when 13 is selected
         elif query_no == 13:
             procedure = input("Enter the procedure name: ")
-            query = sql_queries[query_no].format(procedure.lower())
+            # We replace the `{}` in query 13 with the give procedure
+            query = sql_queries[query_no].format(procedure)
         else:
             query = sql_queries[query_no]
 
+        # Execute the query using the cursor
         cursor.execute(query)
 
+        # The description of each column in the result contains
+        # column_name as the first value
         columns = []
         for desc in cursor.description:
             columns.append(desc[0])
 
+        # Fetch all the rows and store then in rows
         rows = cursor.fetchall()
 
+        # If no rows are returned, print "Empty Set"
         if len(rows) == 0:
             print("\nEmpty Set\n")
-
+        # If rows are returned
         else:
+            # Initialise the pretty table object
             table = PrettyTable(columns)
 
+            # Add rows one by one
             for row in rows:
                 table.add_row(row)
 
+            # Print the table
             print(table)
-
+    # If there is error
     except:
         print("Error executing query")
 
+# Close the connection once execution is done
 connection.close()

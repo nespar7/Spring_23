@@ -3,7 +3,7 @@
 #include <string.h>
 #include <mysql/mysql.h>
 
-const char *queries[] = {
+char *queries[] = {
     "select distinct ph.name from physician as ph join trained_in as tr on tr.physician = ph.employeeid join `procedure` as pr on pr.code = tr.treatment where pr.name = 'bypass surgery';",
     "select distinct ph.name from physician as ph join affiliated_with as aw on (aw.physician, aw.department) = ( ph.employeeid, ( select departmentid from department where name = 'cardiology' ) ) join trained_in as tr on tr.physician = ph.employeeid join `procedure` as pr on pr.code = tr.treatment where pr.name = 'bypass surgery';",
     "select distinct name from nurse as n join room as r on r.number = 123 join on_call as oc on (oc.blockfloor, oc.blockcode) = (r.blockfloor, r.blockcode) where oc.nurse = n.employeeid;",
@@ -16,7 +16,7 @@ const char *queries[] = {
     "select distinct ph.name as physician, ( select name from `procedure` as pr where pr.code = u.`procedure` ) as `procedure`, u.date, ( select name from patient as pt where pt.ssn = u.patient ) as patient from physician as ph join trained_in as tr on tr.physician = ph.employeeid join undergoes as u on u.physician = ph.employeeid where tr.treatment = u.`procedure` and u.date > tr.certificationexpires;",
     "with temp as ( select pt.name as patient, pt.pcp as physician, ( select count(*) from appointment as ap where ap.patient = pt.ssn and ap.physician in ( select ph.employeeid from physician as ph join affiliated_with as aw on aw.physician = ph.employeeid join department as dp on dp.departmentid = aw.department where dp.name = 'cardiology' ) ) as appointmentswithcardiologist, ( select count(*) from prescribes as pr where pr.patient = pt.ssn and pr.physician = pt.pcp ) as physicianprescribed, ( select count(*) from undergoes as u join `procedure` as pr on pr.code = u.`procedure` where u.patient = pt.ssn and pr.cost > 5000 ) as costatleastfivek from patient as pt ) select distinct patient, ( select physician.name from physician where physician.employeeid = temp.physician ) as physician from temp where appointmentswithcardiologist >= 2 and costatleastfivek >= 1 and physicianprescribed >= 1 and physician not in ( select head from department );",
     "with medicinepatient as ( select distinct mc.name as medicine, mc.brand as brand, pc.patient as patient from medication as mc join prescribes as pc on pc.medication = mc.code ), countprescribed as ( select medicine, brand, count(*) as times_prescribed from medicinepatient group by medicine, brand ), maxprescribed as ( select max(times_prescribed) as max_pres from countprescribed ) select medicine, brand from countprescribed, maxprescribed where countprescribed.times_prescribed = maxprescribed.max_pres;",
-    "select distinct ph.name from physician as ph join trained_in as tr on tr.physician = ph.employeeid join `procedure` as pr on pr.code = tr.treatment where pr.name = '%s';"
+    "select distinct ph.name from physician as ph join trained_in as tr on tr.physician = ph.employeeid join `procedure` as pr on pr.code = tr.treatment where pr.name = '"
 };
 
 int main(){
@@ -52,20 +52,38 @@ int main(){
             continue;
         }
         else{
-            char procedure[30];
-            char final_query[210];
-
-            if(query_num == 13){
-                printf("Enter procedure name: ");
-                scanf("%s", procedure);
-                sprintf(final_query, queries[12], procedure);
+            if(query_num != 13){
+                if(mysql_query(connection, queries[query_num-1])){
+                    perror("Could not run query: ");
+                    exit(1);
+                }
             }
             else{
-                strcpy(final_query, queries[query_num-1]);
-            }
-            if(mysql_query(connection, final_query)){
-                perror("Could not run query: ");
-                exit(1);
+                char procedure[40];
+                char *formatted_query;
+
+                printf("Enter procedure name: ");
+                getchar();
+                fgets(procedure, 40, stdin);
+
+                int len = strlen(procedure) + strlen(queries[12]) + 3;
+                formatted_query = (char *)malloc(len*sizeof(char));
+                if(formatted_query == NULL){
+                    printf("malloc error\n");
+                    exit(1);
+                }
+
+                strcpy(formatted_query, queries[12]);
+                strcat(formatted_query, procedure);
+                formatted_query[strlen(formatted_query)-1] = '\0';
+                strcat(formatted_query, "';");
+
+                if(mysql_query(connection, formatted_query)){
+                    perror("Could not run query: ");
+                    exit(1);
+                }
+
+                free(formatted_query);
             }
 
             result = mysql_store_result(connection);
@@ -73,6 +91,11 @@ int main(){
             columns = mysql_num_fields(result);
             MYSQL_FIELD *fields = mysql_fetch_fields(result);
             
+            int rows = mysql_num_rows(result);
+            if(rows == 0){
+                printf("\nEmpty Set\n\n");
+                continue;
+            }
             int *field_lengths = (int *)malloc(columns * sizeof(int));
             memset(field_lengths, 0, columns*sizeof(int));
 

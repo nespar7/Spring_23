@@ -423,7 +423,7 @@ where
 
 -- q8
 -- here i have also considered the case when the physician is certified at some point of time
--- but when the operation was happening, their certification is not yet issued or has expired
+-- but when the operation was happening, their certification is not yet issued
 select distinct
     (
         select 

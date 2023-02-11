@@ -7,6 +7,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+typedef struct request {
+    char method[5];
+    char host[16];
+    char directory[100];
+} request_t;
+
 char *takeInput(FILE *fp, size_t size)
 {
     char *str;
@@ -35,7 +41,15 @@ char *takeInput(FILE *fp, size_t size)
     return realloc(str, sizeof(*str) * len);
 }
 
-// For now I assume that the ip address and host are given in the arguments
+request_t* parsePrompt(char *prompt){
+    request_t *req = (request_t*)malloc(sizeof(request_t));
+    memset(req, 0, sizeof(request_t));
+
+    char *temp = req->directory;
+    sscanf(prompt, "%s http://%[^/]/%n", req->method, req->host, &temp);
+}
+
+// For now I assume that the host ip address and port are given in the arguments
 int main(int argc, char *argv[]){
     int browser_sockfd;
     int response;
@@ -62,6 +76,7 @@ int main(int argc, char *argv[]){
             close(browser_sockfd);
             exit(EXIT_FAILURE);
         }
+
 
     }
 }

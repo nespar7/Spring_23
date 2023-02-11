@@ -63,7 +63,7 @@ public class MySQLConnector {
                     String procedure = scanner.nextLine();
 
                     // replace the %s in 13th query with procedure
-                    query = String.format(MySQLQueries.get(key), procedure.toLowerCase());
+                    query = String.format(MySQLQueries.get(key), procedure);
                 }
 
                 // If query is null (out of bound accessing the map)

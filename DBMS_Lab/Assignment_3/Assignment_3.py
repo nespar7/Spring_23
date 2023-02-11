@@ -304,7 +304,7 @@ while 1:
     try:
         # Take query number as use input
         query_no = int(input("Select a query to run(1-13), 0 to exit: "))
-        # Break for 0
+        # Break when user enters 0
         if query_no == 0:
             print("Bye have a nice day ;))")
             break

@@ -70,6 +70,7 @@ public class MySQLConnector {
                 // print invalid query message and go to start of loop
                 if(query == null){
                     System.out.println("Invalid query number entered");
+
                     continue;
                 }
 

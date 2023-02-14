@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <time.h>
+#include <poll.h>
 #include <sys/wait.h>
 
 #define BUFFMAX 100
@@ -29,18 +30,12 @@ const char *put_request = "PUT %s/%s HTTP/1.1\r\n"
                           "Content-length: %ld\r\n"
                           "Content-type: %s\r\n\r\n";
 
-enum header_type
-{
-    EXPIRES,
-    CACHE_CONTROL,
-    LAST_MODIFIED,
-    CONTENT_LANGUAGE,
-    CONTENT_LENGTH,
-    CONTENT_TYPE
+
+enum header_type {
+    EXPIRES, CACHE_CONTROL, LAST_MODIFIED, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE
 };
 
-struct header
-{
+struct header {
     char *name;
     char *value;
 };
@@ -48,49 +43,39 @@ typedef struct header header;
 
 header RES_HEADERS[6];
 
-void toUpper(char *str)
-{
-    for (int i = 0; i < strlen(str); ++i)
-    {
-        if (str[i] >= 'a' && str[i] <= 'z')
-        {
-            str[i] = (char)(str[i] - 'a' + 'A');
+void toUpper(char *str) {
+    for (int i = 0; i < strlen(str); ++i) {
+        if (str[i] >= 'a' && str[i] <= 'z') {
+            str[i] = (char) (str[i] - 'a' + 'A');
         }
     }
 }
 
-int minimum(int x)
-{
+int minimum(int x) {
     return x < BUFFMAX ? x : BUFFMAX;
 }
 
-char *readline(int fd, int *size)
-{
+char *readline(int fd, int *size) {
     char c;
     *size = 0;
     int bufferSize = BUFFMAX;
-    char *buffer = (char *)malloc(sizeof(char) * bufferSize);
-    while (1)
-    {
-        int i = (int)read(fd, &c, 1);
-        if (i <= 0)
-        {
+    char *buffer = (char *) malloc(sizeof(char) * bufferSize);
+    while (1) {
+        int i = (int) read(fd, &c, 1);
+        if (i <= 0) {
             return NULL;
         }
         buffer[*size] = c;
         *size = *size + 1;
-        if (*size >= BUFFMAX)
-        {
-            buffer = (char *)realloc(buffer, sizeof(char) * (bufferSize + BUFFMAX));
+        if (*size >= BUFFMAX) {
+            buffer = (char *) realloc(buffer, sizeof(char) * (bufferSize + BUFFMAX));
             bufferSize = bufferSize + BUFFMAX;
         }
-        if (c == '\r')
-        {
-            (int)read(fd, &c, 1);
+        if (c == '\r') {
+            (int) read(fd, &c, 1);
             break;
         }
-        if (c == '\n')
-        {
+        if (c == '\n') {
             break;
         }
     }
@@ -100,16 +85,13 @@ char *readline(int fd, int *size)
 }
 
 // function to send get request
-int send_data(int sockfd, char *buffer, int buffsize)
-{
-    const char *temp = (const char *)buffer;
+int send_data(int sockfd, char *buffer, int buffsize) {
+    const char *temp = (const char *) buffer;
 
     // while buffer still has data, send 50 or buffsize(minimum of) number of bytes
-    while (buffsize > 0)
-    {
+    while (buffsize > 0) {
         int response = send(sockfd, temp, minimum(buffsize), 0);
-        if (response < 0)
-            return -1;
+        if (response < 0) return -1;
 
         // increment the temp string to the position of the next character to be sent
         temp += response;
@@ -118,52 +100,37 @@ int send_data(int sockfd, char *buffer, int buffsize)
     return 0;
 }
 
-int send_file(int sockfd, FILE *fp)
-{
+int send_file(int sockfd, FILE *fp) {
     char buffer[BUFFMAX];
     int response;
 
     int readsize;
     readsize = fread(buffer, sizeof(char), BUFFMAX, fp);
-    while (readsize)
-    {
+    while (readsize) {
         response = send_data(sockfd, buffer, readsize);
-        if (response < 0)
-            return -1;
+        if (response < 0) return -1;
         readsize = fread(buffer, sizeof(char), BUFFMAX, fp);
     }
 
     return 0;
 }
 
-int receive_file(int sock_fd, char *file_name, long size)
-{
-    printf("%ld\n", size);
+int receive_file(int sock_fd, char *file_name, long size) {
     printf("Receiving file: %s\n", file_name);
     FILE *file = fopen(file_name, "w");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         perror("Error opening file");
         return -1;
     }
-    char *buf = (char *)malloc(BUFFMAX * sizeof(char));
-    for (int i = 0; i < BUFFMAX; i++)
-    {
+    char *buf = (char *) malloc(BUFFMAX * sizeof(char));
+    for (int i = 0; i < BUFFMAX; i++) {
         buf[i] = '\0';
     }
-    while (1)
-    {
+    while (size > 0) {
         int buf_len = recv(sock_fd, buf, BUFFMAX, 0);
-        if (buf_len < 1)
-        {
-            perror("soemthing happen");
-            printf("broke somehow %d\n", buf_len);
-            break;
-        }
+        if (buf_len < 1)break;
         fwrite(buf, sizeof(char), buf_len, file);
         size -= buf_len;
-        if (size <= 0)
-            break;
     }
     free(buf);
     fclose(file);
@@ -171,17 +138,14 @@ int receive_file(int sock_fd, char *file_name, long size)
 }
 
 // function to send put request
-int send_put_request(int sockfd, char *buffer, int buffsize)
-{
-    const char *temp = (const char *)buffer;
+int send_put_request(int sockfd, char *buffer, int buffsize) {
+    const char *temp = (const char *) buffer;
     int response;
 
     // while buffer still has data, send 50 or buffsize(minimum of) number of bytes
-    while (buffsize > 0)
-    {
+    while (buffsize > 0) {
         response = send(sockfd, temp, minimum(buffsize), 0);
-        if (response < 0)
-            return -1;
+        if (response < 0) return -1;
 
         // increment the temp string to the position of the next character to be sent
         temp += response;
@@ -191,8 +155,7 @@ int send_put_request(int sockfd, char *buffer, int buffsize)
     return 0;
 }
 
-char *takeInput(FILE *fp, size_t size)
-{
+char *takeInput(FILE *fp, size_t size) {
     char *str;
     int ch;
     size_t len = 0;
@@ -202,21 +165,15 @@ char *takeInput(FILE *fp, size_t size)
         return str;
     ch = fgetc(fp);
     int initial_spaces_done = 0;
-    while (EOF != ch && ch != '\n')
-    {
-        if (!initial_spaces_done)
-        {
-            if (ch == ' ')
-            {
+    while (EOF != ch && ch != '\n') {
+        if (!initial_spaces_done) {
+            if (ch == ' ') {
                 ch = fgetc(fp);
                 continue;
-            }
-            else
-                initial_spaces_done = 1;
+            } else initial_spaces_done = 1;
         }
         str[len++] = ch;
-        if (len == size)
-        {
+        if (len == size) {
             size += 16;
             str = realloc(str, sizeof(char) * (size));
             if (!str)
@@ -230,8 +187,7 @@ char *takeInput(FILE *fp, size_t size)
     return realloc(str, sizeof(char) * len);
 }
 
-char *separate(char *prompt, char *host, char *file, char *directory, int *port)
-{
+char *separate(char *prompt, char *host, char *file, char *directory, int *port) {
     char *method1 = strtok(prompt, " ");
     if (strcmp(method1, "QUIT") == 0)
         return file;
@@ -239,30 +195,23 @@ char *separate(char *prompt, char *host, char *file, char *directory, int *port)
     int a, b, c, d;
     sscanf(url, "http://%d.%d.%d.%d%s", &a, &b, &c, &d, directory);
     sprintf(host, "%d.%d.%d.%d", a, b, c, d);
-    if (strchr(directory, ':') != NULL)
-    {
+    if (strchr(directory, ':') != NULL) {
         char *temp = strchr(directory, ':');
         temp++;
         *port = atoi(temp);
         directory[strlen(directory) - strlen(temp) - 1] = '\0';
-    }
-    else
-    {
+    } else {
         *port = 80;
     }
 
     if (directory[strlen(directory) - 1] == '/')
         directory[strlen(directory) - 1] = '\0';
 
-    if (strcmp(method1, "PUT") == 0)
-    {
+    if (strcmp(method1, "PUT") == 0) {
         file = strtok(NULL, " ");
-    }
-    else if (strcmp(method1, "GET") == 0)
-    {
+    } else if (strcmp(method1, "GET") == 0) {
         file = directory + strlen(directory) - 1;
-        while (*file != '/')
-        {
+        while (*file != '/') {
             file--;
         }
         file++;
@@ -271,10 +220,8 @@ char *separate(char *prompt, char *host, char *file, char *directory, int *port)
     return file;
 }
 
-int main()
-{
-    while (1)
-    {
+int main() {
+    while (1) {
         printf("MyOwnBrowser> ");
         char *prompt = takeInput(stdin, 50);
         char host[16];
@@ -284,8 +231,7 @@ int main()
         file = separate(prompt, host, file, directory, &port);
 
         int response;
-        if (!strcmp(prompt, "QUIT"))
-        {
+        if (!strcmp(prompt, "QUIT")) {
             printf("Bye have a nice day ;)\n");
             break;
         }
@@ -297,35 +243,27 @@ int main()
         servaddr.sin_port = htons(port);
         inet_aton(host, &servaddr.sin_addr);
 
-        response = connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
-        if (response < 0)
-        {
+        response = connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+        if (response < 0) {
             perror("Connection error");
+            close(sockfd);
             continue;
         }
 
         char request[1024];
-        if (!strcmp(prompt, "GET"))
-        {
+        if (!strcmp(prompt, "GET")) {
             char *last_slash = strrchr(directory, '/');
             char *extension = strrchr(last_slash ? last_slash : directory, '.');
             extension = extension + 1;
 
             char Accept[20];
-            if (!strcmp(extension, "pdf"))
-            {
+            if (!strcmp(extension, "pdf")) {
                 sprintf(Accept, "application/pdf");
-            }
-            else if (!strcmp(extension, "jpg"))
-            {
+            } else if (!strcmp(extension, "jpg")) {
                 sprintf(Accept, "image/jpeg");
-            }
-            else if (!strcmp(extension, "html"))
-            {
+            } else if (!strcmp(extension, "html")) {
                 sprintf(Accept, "text/html");
-            }
-            else
-            {
+            } else {
                 sprintf(Accept, "text/*");
             }
 
@@ -346,37 +284,30 @@ int main()
 
             sprintf(request, get_request, directory, host, port, RightNowButItsAString, Accept,
                     TwoDaysAgoButItsAString);
+
+            printf("\nREQUEST:\n");
             printf("%s\n", request);
 
             send_data(sockfd, request, strlen(request) + 1);
-        }
-        else if (!strcmp(prompt, "PUT"))
-        {
+        } else if (!strcmp(prompt, "PUT")) {
             char *extension = strrchr(file, '.');
             extension = extension + 1;
 
             char Accept[20];
-            if (!strcmp(extension, "pdf"))
-            {
+            if (!strcmp(extension, "pdf")) {
                 sprintf(Accept, "application/pdf");
-            }
-            else if (!strcmp(extension, "jpg"))
-            {
+            } else if (!strcmp(extension, "jpg")) {
                 sprintf(Accept, "image/jpeg");
-            }
-            else if (!strcmp(extension, "html"))
-            {
+            } else if (!strcmp(extension, "html")) {
                 sprintf(Accept, "text/html");
-            }
-            else
-            {
+            } else {
                 sprintf(Accept, "text/*");
             }
 
             FILE *fp = fopen(file, "rb");
-            if (fp == NULL)
-            {
+            if (fp == NULL) {
                 printf("Could not open file %s\n", file);
+                close(sockfd);
                 continue;
             }
             fseek(fp, 0, SEEK_END);
@@ -393,18 +324,18 @@ int main()
 
             sprintf(request, put_request, directory, file, host, port, RightNowButItsAString, Accept, file_size,
                     Accept);
+
+            printf("\nREQUEST:\n");
             printf("%s\n", request);
 
             response = send_put_request(sockfd, request, strlen(request));
-            if (response < 0)
-            {
+            if (response < 0) {
                 perror("Cannot send put request headers");
                 exit(1);
             }
 
             response = send_file(sockfd, fp);
-            if (response < 0)
-            {
+            if (response < 0) {
                 perror("Cannot send file");
                 exit(1);
             }
@@ -413,252 +344,216 @@ int main()
         }
         int req_len;
         char *req;
+        struct pollfd pfd;
+        pfd.events = POLLIN;
+        pfd.fd = sockfd;
+        int flag = poll(&pfd, 1, 3000);
+        if (flag < 0) {
+            perror("poll error");
+            exit(1);
+        } else if (flag == 0) {
+            printf("Connection Timed Out\n");
+            close(sockfd);
+            continue;
+        }
         req = readline(sockfd, &req_len);
+        printf("\nRESPONSE:\n");
+        printf("%s\n", req);
         char *version = strtok(req, " ");
         char *statusCode = strtok(NULL, " ");
         char *statusMessage = strtok(NULL, " ");
-        while (1)
-        {
+        while (1) {
             req = readline(sockfd, &req_len);
-            if (req == NULL)
-            {
+            if (req == NULL) {
                 perror("read error");
                 exit(0);
             }
-            if (req_len == 0)
-            {
+            printf("%s\n", req);
+            if (req_len == 0) {
                 break;
             }
 
             char *name = req;
-            while (name[0] == ' ' || name[0] == '\t')
-            {
+            while (name[0] == ' ' || name[0] == '\t') {
                 name++;
             }
             char *value = strchr(req, ':');
             *value = '\0';
             value++;
-            while (*value == ' ' || *value == '\t')
-            {
+            while (*value == ' ' || *value == '\t') {
                 value++;
             }
             toUpper(name);
-            if (!strcmp(name, "EXPIRES"))
-            {
+            if (!strcmp(name, "EXPIRES")) {
                 RES_HEADERS[EXPIRES].name = name;
                 RES_HEADERS[EXPIRES].value = value;
-            }
-            else if (!strcmp(name, "LAST-MODIFIED"))
-            {
+            } else if (!strcmp(name, "LAST-MODIFIED")) {
                 RES_HEADERS[LAST_MODIFIED].name = name;
                 RES_HEADERS[LAST_MODIFIED].value = value;
-            }
-            else if (strcmp(name, "CACHE-CONTROL") == 0)
-            {
+            } else if (strcmp(name, "CACHE-CONTROL") == 0) {
                 RES_HEADERS[CACHE_CONTROL].name = name;
                 RES_HEADERS[CACHE_CONTROL].value = value;
-            }
-            else if (strcmp(name, "CONTENT-LANGUAGE") == 0)
-            {
+            } else if (strcmp(name, "CONTENT-LANGUAGE") == 0) {
                 RES_HEADERS[CONTENT_LANGUAGE].name = name;
                 RES_HEADERS[CONTENT_LANGUAGE].value = value;
-            }
-            else if (strcmp(name, "CONTENT-LENGTH") == 0)
-            {
+            } else if (strcmp(name, "CONTENT-LENGTH") == 0) {
                 RES_HEADERS[CONTENT_LENGTH].name = name;
                 RES_HEADERS[CONTENT_LENGTH].value = value;
-            }
-            else if (strcmp(name, "CONTENT-TYPE") == 0)
-            {
+            } else if (strcmp(name, "CONTENT-TYPE") == 0) {
                 RES_HEADERS[CONTENT_TYPE].name = name;
                 RES_HEADERS[CONTENT_TYPE].value = value;
             }
-            else
-            {
-                printf("Nice %s header you got there, but no thanks\n", name);
-            }
         }
-        printf("%s %s %s\n", version, statusCode, statusMessage);
-        if (!strcmp(statusCode, "200"))
-        {
+
+        if (!strcmp(statusCode, "200")) {
             long content_length = atol(RES_HEADERS[CONTENT_LENGTH].value);
-            if (content_length)
-            {
+            if (content_length) {
                 fflush(stdout);
                 int child = fork();
-                if (child == 0)
-                {
+                if (child == 0) {
                     receive_file(sockfd, file, content_length);
-                    if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "text/html"))
-                    {
+                    if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "text/html")) {
                         char *mozilla = "firefox";
                         char *browser_path = NULL;
                         char *path = getenv("PATH");
+                        char **all_paths = (char **) malloc(sizeof(char *) * 100);
                         char *path_part = strtok(path, ":");
-                        while (path_part != NULL)
-                        {
+                        all_paths[0] = path_part;
+                        int i = 0;
+                        while (all_paths[i] != NULL) {
                             char executable[4096];
-                            sprintf(executable, "%s/%s", path_part, mozilla);
-                            if (access(executable, F_OK) == 0)
-                            {
+                            sprintf(executable, "%s/%s", all_paths[i], mozilla);
+                            if (access(executable, F_OK) == 0) {
                                 browser_path = executable;
                                 break;
                             }
                             path_part = strtok(NULL, ":");
+                            i++;
+                            all_paths[i] = path_part;
                         }
-                        if (browser_path == NULL)
-                        {
+                        if (browser_path == NULL) {
                             char *google = "google-chrome";
-                            browser_path = NULL;
-                            path = getenv("PATH");
-                            path_part = strtok(path, ":");
-                            while (path_part != NULL)
-                            {
-                                char exec[4096];
-                                sprintf(exec, "%s/%s", path_part, google);
-                                if (access(exec, F_OK) == 0)
-                                {
-                                    browser_path = exec;
+                            i = 0;
+                            while (all_paths[i] != NULL) {
+                                char executable[4096];
+                                sprintf(executable, "%s/%s", all_paths[i], google);
+                                if (access(executable, F_OK) == 0) {
+                                    browser_path = executable;
                                     break;
                                 }
-                                path_part = strtok(NULL, ":");
+                                i++;
                             }
-                            if (browser_path == NULL)
-                            {
+                            if (browser_path == NULL) {
                                 perror("No browsers found");
-                                continue;
+                                close(sockfd);
+                                return 0;
                             }
                         }
 
                         char *const args[] = {browser_path, file, NULL};
                         execvp(browser_path, args);
-                    }
-                    else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "application/pdf"))
-                    {
+                    } else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "application/pdf")) {
                         char *adobe = "acroread";
                         char *reader_path = NULL;
                         char *path = getenv("PATH");
-                        printf("%s\n", path);
+                        char **all_paths = (char **) malloc(sizeof(char *) * 100);
                         char *path_part = strtok(path, ":");
-                        while (path_part != NULL)
-                        {
+                        all_paths[0] = path_part;
+                        int i = 0;
+                        while (all_paths[i] != NULL) {
                             char executable[4096];
-                            sprintf(executable, "%s/%s", path_part, adobe);
-                            if (access(executable, F_OK) == 0)
-                            {
+                            sprintf(executable, "%s/%s", all_paths[i], adobe);
+                            if (access(executable, F_OK) == 0) {
                                 reader_path = executable;
                                 break;
                             }
                             path_part = strtok(NULL, ":");
+                            i++;
+                            all_paths[i] = path_part;
                         }
-                        if (reader_path == NULL)
-                        {
+                        if (reader_path == NULL) {
                             char *evince = "evince";
-                            path = getenv("PATH");
-                            printf("%s\n", path);
-                            path_part = strtok(path, ":");
-                            printf("before %s\n", path_part);
-                            while (path_part != NULL)
-                            {
+                            i = 0;
+                            while (all_paths[i] != NULL) {
                                 char executable[4096];
-                                sprintf(executable, "%s/%s", path_part, evince);
-                                printf("%s\n", executable);
-                                if (access(executable, F_OK) == 0)
-                                {
+                                sprintf(executable, "%s/%s", all_paths[i], evince);
+                                if (access(executable, F_OK) == 0) {
                                     reader_path = executable;
-                                    printf("reader is at %s\n", reader_path);
                                     break;
                                 }
-                                path_part = strtok(NULL, ":");
-                                printf("inside %s\n", path_part);
+                                i++;
                             }
-                            if (reader_path == NULL)
-                            {
-                                perror("No reader found");
-                                continue;
+                            if (reader_path == NULL) {
+                                perror("No readers found");
+                                close(sockfd);
+                                return 0;
                             }
                         }
 
                         char *const args[] = {reader_path, file, NULL};
                         execvp(reader_path, args);
-                    }
-                    else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "image/jpeg"))
-                    {
+                    } else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "image/jpeg")) {
                         char *eog = "eog";
                         char *eog_path = NULL;
                         char *path = getenv("PATH");
                         char *path_part = strtok(path, ":");
-                        while (path_part != NULL)
-                        {
+                        while (path_part != NULL) {
                             char executable[4096];
                             sprintf(executable, "%s/%s", path_part, eog);
-                            if (access(executable, F_OK) == 0)
-                            {
+                            if (access(executable, F_OK) == 0) {
                                 eog_path = executable;
                                 break;
                             }
                             path_part = strtok(NULL, ":");
                         }
-                        if (eog_path == NULL)
-                        {
+                        if (eog_path == NULL) {
                             perror("Image Viewer NOT found");
-                            continue;
+                            close(sockfd);
+                            return 0;
                         }
                         char *const args[] = {eog_path, file, NULL};
                         execvp(eog_path, args);
-                    }
-                    else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "text/*"))
-                    {
+                    } else if (!strcmp(RES_HEADERS[CONTENT_TYPE].value, "text/*")) {
                         char *gedit = "gedit";
                         char *editor_path = NULL;
                         char *path = getenv("PATH");
                         char *path_part = strtok(path, ":");
-                        while (path_part != NULL)
-                        {
+                        while (path_part != NULL) {
                             char executable[4096];
                             sprintf(executable, "%s/%s", path_part, gedit);
-                            if (access(executable, F_OK) == 0)
-                            {
+                            if (access(executable, F_OK) == 0) {
                                 editor_path = executable;
                                 break;
                             }
                             path_part = strtok(NULL, ":");
                         }
-                        if (editor_path == NULL)
-                        {
+                        if (editor_path == NULL) {
                             perror("Gedit NOT found");
-                            continue;
+                            close(sockfd);
+                            return 0;
                         }
                         char *const args[] = {editor_path, file, NULL};
                         execvp(editor_path, args);
-                    }
-                    else
-                    {
+                    } else {
                         printf("Ahh I wish I could have seen how beautiful the %s file was. But alas I don't want to\n",
                                RES_HEADERS[CONTENT_TYPE].value);
                     }
-                }
-                else
-                {
+                    close(sockfd);
+                    return 0;
+                } else {
+                    close(sockfd);
                     continue;
                 }
             }
-        }
-        else if (!strcmp(statusCode, "400"))
-        {
+        } else if (!strcmp(statusCode, "400")) {
             printf("%s\n", statusMessage);
-        }
-        else if (!strcmp(statusCode, "403"))
-        {
+        } else if (!strcmp(statusCode, "403")) {
             printf("%s\n", statusMessage);
-        }
-        else if (!strcmp(statusCode, "404"))
-        {
+        } else if (!strcmp(statusCode, "404")) {
             printf("%s\n", statusMessage);
+        } else {
+            printf("Sorry to say this, error %s occured and we don't know what it is :(\n", statusCode);
         }
-        else
-        {
-            printf("We don't do that here\n");
-        }
+        close(sockfd);
     }
 }

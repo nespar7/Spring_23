@@ -31,3 +31,5 @@ DBMS_Lab/Assignment_3/dummy.c
 DBMS_Lab/Assignment_3/query_exec
 Networks_Lab/Assignment_4/browser
 Networks_Lab/Assignment_4/server
+OS_Lab/asgn2/cmake-build-debug/*
+OS_Lab/asgn2/.idea

@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     using cost = int;
     using node_idx = int;
 
-    priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>> pq;
+    priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
 
     vector<bool> visited(g.getNumNodes(), false);
     map<int, int> parent;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
                 for (int i = oldSize; i < newSize; i++) {
                     if (i % 10 == pid) sourceNodes.insert(i);
                 }
-                priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>> nonOptimizePq;
+                priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>>> nonOptimizePq;
 
                 vector<bool> nonOptimizedVisited(g.getNumNodes(), false);
                 vector<int> nonOptimizedParent(g.getNumNodes(), -1);
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
                 vector<int> tempCosts(newSize, INT_MAX);
                 vector<int> tempParent(newSize, -1);
                 vector<bool> tempVisited(newSize, false);
-                priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>> tempPq;
+                priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>>> tempPq;
                 for (auto i: newSourceNodes) {
                     tempCosts[i] = 0;
                     tempPq.push({0, i});
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
                     vector<int> simpleCosts(newSize, INT_MAX);
                     vector<bool> simpleVisited(newSize, false);
                     simpleCosts[X] = 0;
-                    priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>> simplePq;
+                    priority_queue<pair<cost, node_idx>, vector<pair<int, int>>, greater<pair<int, int>>> simplePq;
                     simplePq.push({0, X});
                     while (!simplePq.empty()) {
                         while (simpleVisited[simplePq.top().second]) {

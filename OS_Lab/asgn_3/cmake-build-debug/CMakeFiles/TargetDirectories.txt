@@ -1,0 +1,8 @@
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/assignment3.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/main.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/producer.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/consumer.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/test.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/print_nbrs.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/zoozoo/Documents/Spring_23/OS_Lab/asgn_3/cmake-build-debug/CMakeFiles/rebuild_cache.dir

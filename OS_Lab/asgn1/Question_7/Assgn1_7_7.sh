@@ -1,13 +1,9 @@
-[ -d "$2" ] || mkdir $2
-
-for file in $1/*; do
-    IFS=$'\n'
-    for line in $(cat $file); do
-        first_letter=${line:0:1}
-        echo $line >> $2/$first_letter.txt
-    done < $file
-done
-
-for file in $2/*; do
-  sort $file -o $file
+[ -d "$2" ] || mkdir $2&&for file in $1/*
+do
+    IFS=$'\n'&&while read line || [ "$line" ]
+    do
+        echo "$line" >> $2/${line:0:1}.txt
+    done < "$file"
+done&&for x in {A..Z}
+do touch "$2/$x.txt"&&sort "$2/$x.txt" -o "$2/$x.txt"
 done

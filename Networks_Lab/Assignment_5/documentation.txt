@@ -1,0 +1,85 @@
+Data structures used in mysocket.c:
+
+MESSAGE_TABLE:
+	
+	1. void *Messages array to store the Message as a pointer to the contiguous block that the message is stored in
+
+	2. size_t lengths array to store the lengths in an array
+
+	3. front and rear and itemCount to implement a circular buffer
+		
+		-> front, rear store the indices of the first and last message pointers
+		-> itemCount stores the number of messages
+
+
+Functions for MESSAGE_TABLE:
+
+	1. isEmpty:
+		If itemCount of the table is 0, it is empty
+	
+	2. isFull:
+		If itemCount is equal to maximum number of messages, the table is full
+
+	3. insert:
+		If the table is not full, increment the rear(modulo max_table_size) and set messages[rear] = message_to_be_inserted. return -1 if full
+
+	4. removeData:
+		If the table is not empty, remove the element at the front(set to empty), set length[front] = 0 and increment front. return -1 if not
+
+
+Functions for sockets:
+
+	1. my_socket:
+		If the socket is already opened, return error. 
+		If the given type is SOCK_MyTCP open TCP socket with given domain and protocol, else return error
+		Handle errors and return fd if socket is successfully opened, else return error
+
+	2. my_bind:
+		If the fd given is not the my_fd socket that we opened with my_socket() call, give error.
+		Else bind to the address and port given. 
+
+	3. my_listen:
+		If the fd given is not the my_fd socket we opened return error.
+		Else listen for connections on the fd. set is_server to 1.
+
+	4. my_accept:
+		if the process is not a server or the fd is not created by my_socket or if the `newsockfd` already exists return error.
+		Do an accept call with the given params. If successful, set my_fd2 to the newly opened socket and set fd2_exists to 1.
+		Call the send_thread() and receive_thread() functions to create the S and R threads.
+
+	5. my_connect:
+		if the process is a server or the fd is not created by my_socket return error.
+		Do a connect call with the given params. If successful, 
+		Call the send_thread() and receive_thread() functions to create the S and R threads.
+
+	6. my_close:
+		If the socket in the params is not one of the sockets we created, we return error.
+		While the connection still exists, we wait until it is closed and then close the socket describe by fd.
+		We close the S and R threads if the connection is closed and reset the tables.
+
+	7. my_send:
+		If the client is not sending through my_fd or the server is not sending through my_fd2, we return error.
+		If connection is closed, return error
+		We store the message in the table and return the length of the message that is received
+
+	8. my_recv:
+		If the client is not receiving through my_fd or the server is not receiving through my_fd2, we return error.
+		while the received message table is empty, wait until the R thread populates the table
+		Return the whole message if the user's required length is more than message length. removes the message from the table and returns the size
+
+
+Thread functions:
+
+	1. sendData:
+		If connection is closed we exit. Else if send message table is empty we wait until someone populates it. If the table is not empty, we take the first message and send it.
+		We remove it from the send message table.
+	
+	2. receiveData:
+		If received message table is full we wait. Then we receive messages using recv() call and if there are EOT characters in the middle,
+		we seperate them into different messages. We populate the received messages table with the message we just received. 
+
+	3. send_thread:
+		Function to spawn the S thread
+	
+	4. receive_thread:
+		Function to spawn the R thread
